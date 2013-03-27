@@ -19,10 +19,9 @@ public class EFrmWebGenerator {
     public String generate(final Reader r) throws Exception {
 
         final ParseTree pt = buildParseTree(r);
-        final eFrmVisitor<String> renderer = new FormRendererVisitor();
-        final eFrmVisitor<String> baseValidator = new FormBaseValVisitor();
+        final eFrmVisitor<String> renderer = new FormJsGenerator();
 
-        return renderer.visit(pt) + baseValidator.visit(pt);
+        return renderer.visit(pt);
 
     }
 

@@ -22,9 +22,15 @@ optionDecl		: labeledId ;
 
 groupDecl		: GROUP ID NL fieldsAndRules END_GROUP NL ;
 
-rulesSection	: RULES NL stat+ ;
+rulesSection	: RULES NL (stat|layout|NL)+ ;
 
-stat			: 'STATEMENT' NL ;
+layout			: 'ASK' ID NL #AskStat 
+				| 'NOASK' ID NL #NoAskStat
+				| 'HEADER' INT STRING #HeaderStat
+				| 'LAYOUT' num=INT+ #LayoutStat
+				;
+
+stat			: 'STAT' ; 
 
 // Keywords
 FORM			: 'FORM' ;

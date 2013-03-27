@@ -3,16 +3,9 @@ FIELDS
 fone : STRING[10]
 ftwo : OPTION { one "test1", two "test 2" }
 ftre : 11..10
-GROUP testGrp
-FIELDS
- g1 : 1..2
- g2 : STRING[1]
- GROUP testGrp2
- FIELDS
-  g1 : 1..2
-  g2 : STRING[1]
- END GROUP
- ffor : testGrp2
-END GROUP
-ffor : testGrp
+RULES
+HEADER 1 "KUKU TRONIC"
+LAYOUT 6 6
+ASK fone
+ASK ftre
 END FORM
