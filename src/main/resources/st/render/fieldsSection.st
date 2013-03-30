@@ -1,1 +1,0 @@
-fieldsSection(field) ::= "$field$"

@@ -1,17 +1,8 @@
-form(id, label, fields, layout, groups, setter, getter, rules) ::= <<
-<div class="container-fluid">
-	<form id="$id$-form"/>
-</div>
-<script type="text/javascript">
-	//<![CDATA[
+groupDef(id, fields, layout, groups, setter, getter, rules) ::= <<
 
 	$groups; separator="\n"$
 	
-var $id$ = Class.extend({
-	init: function() {
-		this.id = "$id$";
-		this.label = "$label$";		
-	},
+var $id$ = Group.extend({
 	$fields$
 	render: function(el) {	
 		if (el) {
@@ -51,12 +42,4 @@ var $id$ = Class.extend({
 	}
 })
 
-console.log("Rendering form");
-
-var frm = new $id$();
-frm.render(jQuery("#$id$-form"));
-frm.checkRules();
-	
-	//]]>
-</script>
 >>

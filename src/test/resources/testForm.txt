@@ -1,11 +1,42 @@
 FORM testForm "Test Form"
-FIELDS
-fone : STRING[10]
-ftwo : OPTION { one "test1", two "test 2" }
-ftre : 11..10
-RULES
-HEADER 1 "KUKU TRONIC"
-LAYOUT 6 6
-ASK fone
-ASK ftre
+  FIELDS
+    fone : STRING[10]
+    ftwo : OPTION { one "test1", two "test 2" }
+    ftwo2 : OPTION [2] { one "test1", two "test 2" }
+    ftre : 11..10
+    GROUP grp1
+      FIELDS
+        g1f1 "Field number 1" : 1..2
+        g1f2 "Field number 2" : 1..2
+        GROUP grp2
+          FIELDS
+            g2f1 "Field number 1" : 1..2
+            g2f2 "Field number 2" : 1..2
+          LAYOUT
+            GRID 6 6
+            g2f1
+            g2f2
+        END GROUP
+        g1f3 "Field number 3" : grp2
+        g1f4 : grp2
+      LAYOUT
+        HEADER 3 "Test Group"        
+        g1f1
+        g1f2
+        g1f3
+      PARAMETERS
+        p1 : NUMBER
+        p2 : STRING
+    END GROUP
+    f4 : grp1
+  LAYOUT
+    HEADER 1 "KUKU TRONIC"
+    GRID 6 6
+    fone
+    f4
+    ftre
+  RULES
+    testVar : NUMBER = 100
+    testVar  = 1
+    f4.g1f1 = 1
 END FORM
