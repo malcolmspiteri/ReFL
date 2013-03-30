@@ -15,7 +15,9 @@ import main.antlr.eFrmParser.HeaderStatContext;
 import main.antlr.eFrmParser.IDExprContext;
 import main.antlr.eFrmParser.IfContStatContext;
 import main.antlr.eFrmParser.IntegerLiteralExprContext;
+import main.antlr.eFrmParser.NoAskStatContext;
 import main.antlr.eFrmParser.OptionExprContext;
+import main.antlr.eFrmParser.RenderStatContext;
 import main.antlr.eFrmParser.StatContext;
 import main.antlr.eFrmParser.StringLiteralExprContext;
 
@@ -26,6 +28,7 @@ import uk.ac.mdx.efrm.error.eFrmErrorHandler;
 import uk.ac.mdx.efrm.scope.GroupSymbol;
 import uk.ac.mdx.efrm.scope.Scope;
 import uk.ac.mdx.efrm.scope.Symbol;
+import uk.ac.mdx.efrm.scope.Symbol.Section;
 import uk.ac.mdx.efrm.scope.Symbol.Type;
 import uk.ac.mdx.efrm.scope.VariableSymbol;
 
@@ -71,6 +74,7 @@ public class eFrmValidatingVisitor extends eFrmBaseVisitor<Symbol.Type> {
 
     /****************** RULES ******************/
 
+    
     @Override
     public Symbol.Type visitIDExpr(final IDExprContext ctx) {
         Symbol.Type ret = null;
@@ -96,7 +100,17 @@ public class eFrmValidatingVisitor extends eFrmBaseVisitor<Symbol.Type> {
         return ret;
     }
 
-    @Override
+//    @Override
+//	public Type visitNoAskStat(NoAskStatContext ctx) {
+//    	final String name = ctx.ID().getSymbol().getText();
+//    	final Symbol var = currentScope.resolve(name);
+//    	if (var == null || var.getSection() == Section.RULES) {
+//    		errorHandler.addError(ctx.expr().getSymbol(), "no such field: " + name);
+//    	}
+//		return super.visitNoAskStat(ctx);
+//	}
+
+	@Override
     public Type visitOptionExpr(final OptionExprContext ctx) {
         return Type.tOPTION;
     }
@@ -191,7 +205,7 @@ public class eFrmValidatingVisitor extends eFrmBaseVisitor<Symbol.Type> {
     }
 
     @Override
-    public Symbol.Type visitAskStat(final AskStatContext ctx) {
+    public Symbol.Type visitRenderStat(final RenderStatContext ctx) {
         final String name = ctx.ID().getSymbol().getText();
         final Symbol var = currentScope.resolve(name);
         if (var == null) {

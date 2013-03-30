@@ -30,6 +30,18 @@ var $id$ = Class.extend({
 			}			
 		}
 		$endif$
+		
+		var _this = this;
+		jQuery("#$id$-form input[type='text']").focusout(function() {			
+			_this.checkRules();
+		});
+		jQuery("#$id$-form input[type='radio']").click(function() {			
+			_this.checkRules();
+		});
+		jQuery("#$id$-form input[type='checkbox']").click(function() {			
+			_this.checkRules();
+		});
+
 	},
 	val: function(obj) {
 		var ret = obj;

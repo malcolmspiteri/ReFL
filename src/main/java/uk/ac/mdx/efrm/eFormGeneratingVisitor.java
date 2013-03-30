@@ -27,10 +27,12 @@ import main.antlr.eFrmParser.IntegerLiteralExprContext;
 import main.antlr.eFrmParser.LabeledIdContext;
 import main.antlr.eFrmParser.LayoutSectionContext;
 import main.antlr.eFrmParser.NewRowStatContext;
+import main.antlr.eFrmParser.NoAskStatContext;
 import main.antlr.eFrmParser.NumberRangeTypeContext;
 import main.antlr.eFrmParser.OptionDeclContext;
 import main.antlr.eFrmParser.OptionExprContext;
 import main.antlr.eFrmParser.OptionTypeContext;
+import main.antlr.eFrmParser.RenderStatContext;
 import main.antlr.eFrmParser.RulesSectionContext;
 import main.antlr.eFrmParser.SkipStatContext;
 import main.antlr.eFrmParser.StatContext;
@@ -339,7 +341,7 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
     }
 
     @Override
-    public String visitAskStat(final AskStatContext ctx) {
+    public String visitRenderStat(final RenderStatContext ctx) {
         return " this." + ctx.ID().getText() + ".render(cellEl);";
     }
 
@@ -479,4 +481,14 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
         return stf.render();
     }
 
+	@Override
+	public String visitNoAskStat(NoAskStatContext ctx) {
+		return visit(ctx.expr()) + ".disable();";
+	}
+
+	@Override
+	public String visitAskStat(AskStatContext ctx) {
+		return visit(ctx.expr()) + ".enable();";
+	}
+    
 }

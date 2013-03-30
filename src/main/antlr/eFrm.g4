@@ -26,7 +26,7 @@ rulesSection	: RULES NL (stat|NL)+ ;
 
 layoutSection	: LAYOUT NL (layout NL|NL)+ ;
 
-layout			: ID #AskStat 
+layout			: ID #RenderStat 
 				| HEADER INT STRING #HeaderStat
 				| GRID num=INT+ #GridStat
 				| INFO STRING #InfoStat
@@ -37,7 +37,8 @@ layout			: ID #AskStat
 stat			: expr '=' expr NL #AssignStat  
 				| varDecl NL #VarDecStat
 				| IF expr THEN NL+ stat+ elseBlock? 'END IF' NL #IfContStat
-				| NOASK ID NL #DisableStat
+				| NOASK expr NL #NoAskStat
+				| ASK expr NL #AskStat
 				;
 
 elseBlock		: ELSE NL stat+ ;
@@ -74,6 +75,7 @@ IF				: 'IF' ;
 THEN			: 'THEN' ;
 ELSE			: 'ELSE' ;
 NOASK	        : 'NOASK' ;
+ASK	       		: 'ASK' ;
 
 // Layout tokes
 LAYOUT			: 'LAYOUT' ;

@@ -29,11 +29,6 @@ public class eFrmGenerator {
         final ParseTree tree = buildParseTree(r);
         final ParseTreeProperty<Scope> scopes = buildSymbolTable(tree);
 
-        if (errorHandler.hasErrors()) {
-            throw new eFrmErrorException(errorHandler.generateErrorReport());
-        }
-
-        final ParseTreeWalker walker = new ParseTreeWalker();
         final eFrmVisitor<Symbol.Type> validator = new eFrmValidatingVisitor(errorHandler, scopes);
         validator.visit(tree);
 

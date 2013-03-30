@@ -14,6 +14,7 @@ import main.antlr.eFrmParser.GroupTypeContext;
 import main.antlr.eFrmParser.HeaderStatContext;
 import main.antlr.eFrmParser.IDExprContext;
 import main.antlr.eFrmParser.IntegerLiteralExprContext;
+import main.antlr.eFrmParser.RenderStatContext;
 import main.antlr.eFrmParser.StringLiteralExprContext;
 
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
@@ -131,7 +132,7 @@ public class eFrmValidator extends eFrmBaseListener {
     }
 
     @Override
-    public void exitAskStat(final AskStatContext ctx) {
+    public void exitRenderStat(final RenderStatContext ctx) {
         final String name = ctx.ID().getSymbol().getText();
         final Symbol var = currentScope.resolve(name);
         if (var == null) {
