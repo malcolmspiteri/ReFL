@@ -215,7 +215,7 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
     public String visitAssignStat(final AssignStatContext ctx) {
         final String e0 = visit(ctx.expr(0));
         final String e1 = visit(ctx.expr(1));
-        return e0 + ".val(" + getValIfNecessary(e1) + ");";
+        return e0 + ".val(" + addValIfNecessary(e1) + ");";
     }
 
     @Override
@@ -223,7 +223,7 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
         return visit(ctx.varDecl());
     }
 
-    private String getValIfNecessary(final String expr) {
+    private String addValIfNecessary(final String expr) {
         if (!(expr.endsWith(".val()") || expr.endsWith(".val())"))) {
             return expr + ".val()";
         }
@@ -235,7 +235,7 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
         final StringBuilder sb = new StringBuilder("var " + ctx.ID().getText());
         sb.append(" = new Variable(");
         if (ctx.expr() != null) {
-            sb.append(getValIfNecessary(visit(ctx.expr())));
+            sb.append(addValIfNecessary(visit(ctx.expr())));
         }
         sb.append(");");
         return sb.toString();
@@ -435,14 +435,14 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
 
     @Override
     public String visitArithmeticExpr(final ArithmeticExprContext ctx) {
-        return getValIfNecessary(visit(ctx.expr(0))) +
+        return addValIfNecessary(visit(ctx.expr(0))) +
             ctx.op.getText() +
-            getValIfNecessary(visit(ctx.expr(1)));
+            addValIfNecessary(visit(ctx.expr(1)));
     }
 
     @Override
     public String visitBracketedExpr(final BracketedExprContext ctx) {
-        return "(" + getValIfNecessary(visit(ctx.expr())) + ")";
+        return "(" + addValIfNecessary(visit(ctx.expr())) + ")";
     }
 
     @Override
@@ -463,8 +463,8 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
 
     @Override
     public String visitEqualityExpr(final EqualityExprContext ctx) {
-        return String.format("areEqual(%s,%s)", getValIfNecessary(visit(ctx.expr(0))),
-            getValIfNecessary(visit(ctx.expr(1))));
+        return String.format("areEqual(%s,%s)", addValIfNecessary(visit(ctx.expr(0))),
+            addValIfNecessary(visit(ctx.expr(1))));
     }
 
     @Override
