@@ -27,6 +27,12 @@ public class eFrmGenerator {
     public String generate(final Reader r) throws IOException, eFrmErrorException {
 
         final ParseTree tree = buildParseTree(r);
+        
+        if (errorHandler.hasErrors()) {
+            throw new eFrmErrorException(errorHandler.generateErrorReport());
+        }
+
+        
         final ParseTreeProperty<Scope> scopes = buildSymbolTable(tree);
 
         final eFrmVisitor<Symbol.Type> validator = new eFrmValidatingVisitor(errorHandler, scopes);

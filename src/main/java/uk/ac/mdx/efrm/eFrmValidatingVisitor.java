@@ -1,5 +1,8 @@
 package uk.ac.mdx.efrm;
 
+import java.util.Iterator;
+import java.util.Stack;
+
 import main.antlr.eFrmBaseVisitor;
 import main.antlr.eFrmParser.ArithmeticExprContext;
 import main.antlr.eFrmParser.AssignStatContext;
@@ -12,6 +15,7 @@ import main.antlr.eFrmParser.GroupDeclContext;
 import main.antlr.eFrmParser.GroupTypeContext;
 import main.antlr.eFrmParser.HeaderStatContext;
 import main.antlr.eFrmParser.IDExprContext;
+import main.antlr.eFrmParser.IdRefContext;
 import main.antlr.eFrmParser.IfContStatContext;
 import main.antlr.eFrmParser.IntegerLiteralExprContext;
 import main.antlr.eFrmParser.OptionExprContext;
@@ -20,10 +24,8 @@ import main.antlr.eFrmParser.StatContext;
 import main.antlr.eFrmParser.StringLiteralExprContext;
 
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
-import org.antlr.v4.runtime.tree.TerminalNode;
 
 import uk.ac.mdx.efrm.error.eFrmErrorHandler;
-import uk.ac.mdx.efrm.scope.FieldSymbol;
 import uk.ac.mdx.efrm.scope.GroupSymbol;
 import uk.ac.mdx.efrm.scope.Scope;
 import uk.ac.mdx.efrm.scope.Symbol;
@@ -71,29 +73,66 @@ public class eFrmValidatingVisitor extends eFrmBaseVisitor<Symbol.Type> {
 
     /****************** RULES ******************/
 
+    private final Stack<String> ancestors = new Stack<String>();
+
+    private String ancestors() {
+        final Iterator<String> iter = ancestors.iterator();
+        final StringBuilder sb = new StringBuilder();
+        while (iter.hasNext()) {
+            sb.append(iter.next());
+            sb.append('.');
+        }
+        return sb.toString();
+    }
+
     @Override
     public Symbol.Type visitIDExpr(final IDExprContext ctx) {
         Symbol.Type ret = null;
-        Scope scope = currentScope;
-        Symbol prevVar = null;
-        for (final TerminalNode tn : ctx.ID()) {
-            final String name = tn.getSymbol().getText();
-            if ((prevVar != null) && (prevVar.getType() == Symbol.Type.tGROUP_REF)) {
-                final String grpName = ((FieldSymbol) prevVar).getGrpName();
-                scope = scope.getSubScope(grpName);
-            }
-            final Symbol var = scope.resolve(name);
-            if (var == null) {
-                errorHandler.addError(tn.getSymbol(), "no such variable or field: " + name);
-            } else {
-                if (var instanceof GroupSymbol) {
-                    errorHandler.addError(tn.getSymbol(), name + " is not a variable or field");
-                }
-                ret = var.getType();
-            }
-            prevVar = var;
+        for (int i = 0; i < ctx.idRef().size(); i++) {
+            ret = visit(ctx.idRef(i));
+            ancestors.push(ctx.idRef(i).ID().getText());
         }
+        ancestors.clear();
         return ret;
+    }
+
+    @Override
+    public Type visitIdRef(final IdRefContext ctx) {
+        final String name = ctx.ID().getSymbol().getText();
+        final Symbol var = currentScope.resolve(ancestors() + name);
+        if (var == null) {
+            errorHandler.addError(ctx.ID().getSymbol(), "no such variable or field: " + name);
+            return Type.tINVALID;
+        } else {
+            if (var instanceof GroupSymbol) {
+                errorHandler.addError(ctx.ID().getSymbol(), name + " is not a variable or field");
+            }
+            if ((ctx.INT() != null) && !var.getType().isArray()) {
+                errorHandler.addError(ctx.ID().getSymbol(), name + " is not an array");
+            }
+            if ((ctx.INT() == null) && var.getType().isArray()) {
+                errorHandler.addError(ctx.ID().getSymbol(), name + " is an array");
+            }
+            if (var.getType().isArray() && (ctx.INT() != null)) {
+                return toNonArrayType(var.getType());
+            } else {
+                return var.getType();
+            }
+        }
+    }
+
+    private Symbol.Type toNonArrayType(final Symbol.Type type) {
+        switch (type) {
+            case tGROUP_REF_ARRAY:
+                return Symbol.Type.tGROUP_REF;
+            case tNUMBER_ARRAY:
+                return Symbol.Type.tNUMBER;
+            case tOPTION_ARRAY:
+                return Symbol.Type.tOPTION;
+            case tSTRING_ARRAY:
+                return Symbol.Type.tSTRING;
+        }
+        return Symbol.Type.tINVALID;
     }
 
     // @Override
@@ -200,33 +239,27 @@ public class eFrmValidatingVisitor extends eFrmBaseVisitor<Symbol.Type> {
         return null;
     }
 
-    @Override
-    public Symbol.Type visitRenderStat(final RenderStatContext ctx) {
-        final String name = ctx.ID().getSymbol().getText();
-        final Symbol var = currentScope.resolve(name);
-        if (var == null) {
-            errorHandler.addError(ctx.ID().getSymbol(), "no such field: " + name);
-        } else {
-            if (var instanceof GroupSymbol) {
-                errorHandler.addError(ctx.ID().getSymbol(), name + " is not a field");
-            }
-        }
-        return null;
-    }
-
     /****************** FIELDS ******************/
 
     @Override
     public Symbol.Type visitGroupType(final GroupTypeContext ctx) {
-        final String name = ctx.ID().getSymbol().getText();
+        final String name = ctx.ID().getText();
         final Symbol var = currentScope.resolve(name);
         if (var == null) {
             errorHandler.addError(ctx.ID().getSymbol(), "no such group: " + name);
+            return Type.tINVALID;
         }
         return var.getType();
     }
 
     /****************** LAYOUT ******************/
+
+    @Override
+    public Symbol.Type visitRenderStat(final RenderStatContext ctx) {
+        Symbol.Type ret = null;
+        ret = visit(ctx.idRef());
+        return ret;
+    }
 
     @Override
     public Symbol.Type visitHeaderStat(final HeaderStatContext ctx) {

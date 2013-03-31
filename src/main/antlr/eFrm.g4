@@ -8,7 +8,7 @@ labeledId		: ID STRING? ;
 
 fieldsSection	: FIELDS NL (fieldDecl|groupDecl|NL)+ ;
 
-fieldDecl		: labeledId ':' type NL ;
+fieldDecl		: labeledId ':' (ARRAY '[' INT ']' 'OF')? type NL ;
 
 type			: STRING_TYPE '[' INT ']' #StringType
 				| lb=INT '..' ub=INT #NumberRangeType
@@ -18,15 +18,13 @@ type			: STRING_TYPE '[' INT ']' #StringType
 
 optionDecl		: NL* labeledId ;
 
-groupDecl		: GROUP ID NL fieldsSection layoutSection? paramsSection? rulesSection? END_GROUP NL ;
-
-paramsSection	: PARAMETERS NL (paramDecl NL)+ ;
+groupDecl		: GROUP ID NL fieldsSection layoutSection? rulesSection? END_GROUP NL ;
 
 rulesSection	: RULES NL (stat|NL)+ ;
 
 layoutSection	: LAYOUT NL (layout NL|NL)+ ;
 
-layout			: ID #RenderStat 
+layout			: idRef #RenderStat 
 				| HEADER INT STRING #HeaderStat
 				| GRID num=INT+ #GridStat
 				| INFO STRING #InfoStat
@@ -43,15 +41,13 @@ stat			: expr '=' expr NL #AssignStat
 
 elseBlock		: ELSE NL stat+ ;
 
-paramDecl		: ID ':' varType ;
-
 varDecl			: ID ':' varType ('=' expr)? ;
 
 varType			: STRING_TYPE
 				| NUMBER
 				;
 				
-expr			: ID ('.' ID)* #IDExpr
+expr			: idRef ('.' idRef)* #IDExpr
 				| '[' ID (',' ID)* ']' #OptionExpr
 				| '(' expr ')' #BracketedExpr
 				| expr '==' expr #EqualityExpr				
@@ -59,12 +55,15 @@ expr			: ID ('.' ID)* #IDExpr
 				| INT #IntegerLiteralExpr
 				| STRING #StringLiteralExpr
 				;
-				
+
+idRef			: ID ('[' INT ']')? ;
+
 // Keywords
 FORM			: 'FORM' ;
 END_FORM		: 'END FORM' ;
 FIELDS			: 'FIELDS' ;
 STRING_TYPE		: 'STRING' ;
+ARRAY			: 'ARRAY' ;
 OPTION			: 'OPTION' ;
 GROUP			: 'GROUP' ;
 END_GROUP		: 'END GROUP' ;

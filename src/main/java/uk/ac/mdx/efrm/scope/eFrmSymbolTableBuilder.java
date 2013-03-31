@@ -5,12 +5,6 @@ import main.antlr.eFrmParser;
 import main.antlr.eFrmParser.FieldDeclContext;
 import main.antlr.eFrmParser.FormContext;
 import main.antlr.eFrmParser.GroupDeclContext;
-import main.antlr.eFrmParser.GroupTypeContext;
-import main.antlr.eFrmParser.NumberRangeTypeContext;
-import main.antlr.eFrmParser.OptionTypeContext;
-import main.antlr.eFrmParser.ParamDeclContext;
-import main.antlr.eFrmParser.StringTypeContext;
-import main.antlr.eFrmParser.TypeContext;
 import main.antlr.eFrmParser.VarDeclContext;
 import main.antlr.eFrmParser.VarTypeContext;
 
@@ -18,12 +12,16 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 
+import uk.ac.mdx.efrm.scope.Symbol.Type;
+
 public class eFrmSymbolTableBuilder extends eFrmBaseListener {
 
     public static Symbol.Type getType(final int tokenType) {
         switch (tokenType) {
             case eFrmParser.GROUP:
                 return Symbol.Type.tGROUP;
+            case eFrmParser.ID:
+                return Symbol.Type.tGROUP_REF;
             case eFrmParser.NUMBER:
                 return Symbol.Type.tNUMBER;
             case eFrmParser.INT:
@@ -32,6 +30,20 @@ public class eFrmSymbolTableBuilder extends eFrmBaseListener {
                 return Symbol.Type.tSTRING;
             case eFrmParser.OPTION:
                 return Symbol.Type.tOPTION;
+        }
+        return Symbol.Type.tINVALID;
+    }
+
+    public static Symbol.Type getArrayType(final int tokenType) {
+        switch (tokenType) {
+            case eFrmParser.INT:
+                return Symbol.Type.tNUMBER_ARRAY;
+            case eFrmParser.STRING_TYPE:
+                return Symbol.Type.tSTRING_ARRAY;
+            case eFrmParser.OPTION:
+                return Symbol.Type.tOPTION_ARRAY;
+            case eFrmParser.ID:
+                return Symbol.Type.tGROUP_REF_ARRAY;
         }
         return Symbol.Type.tINVALID;
     }
@@ -68,7 +80,7 @@ public class eFrmSymbolTableBuilder extends eFrmBaseListener {
         // push new scope by making new one that points to enclosing scope
         final GroupSymbol group = new GroupSymbol(name, type, currentScope);
         currentScope.define(group); // Define group in current scope
-        currentScope.defineSubScope(name, group);
+        currentScope.addSubScope(name, group);
         saveScope(ctx, group); // Push: set function's parent to current
         currentScope = group; // Current scope is now function scope
     }
@@ -80,56 +92,29 @@ public class eFrmSymbolTableBuilder extends eFrmBaseListener {
     }
 
     @Override
-    public void exitParamDecl(final ParamDeclContext ctx) {
-        defineVar(ctx.varType(), ctx.ID().getSymbol());
-    }
-
-    @Override
     public void exitVarDecl(final VarDeclContext ctx) {
         defineVar(ctx.varType(), ctx.ID().getSymbol());
     }
 
-    private Token currFieldId = null;
-
     @Override
-    public void enterFieldDecl(final FieldDeclContext ctx) {
-        currFieldId = ctx.labeledId().ID().getSymbol();
+    public void exitFieldDecl(final FieldDeclContext ctx) {
+        defineField(ctx, ctx.labeledId().ID().getSymbol());
     }
 
-    @Override
-    public void exitOptionType(final OptionTypeContext ctx) {
-        defineField(ctx, currFieldId);
-    }
-
-    @Override
-    public void exitNumberRangeType(final NumberRangeTypeContext ctx) {
-        defineField(ctx, currFieldId);
-    }
-
-    @Override
-    public void exitGroupType(final GroupTypeContext ctx) {
-        final Symbol grpSymbol = currentScope.resolve(ctx.ID().getText());
-        if (grpSymbol != null) {
-            defineGroupVar(ctx.ID().getText(), currFieldId);
+    void defineField(final FieldDeclContext varTypeCtx, final Token nameToken) {
+        final int typeTokenType = varTypeCtx.type().start.getType();
+        Symbol.Type type = Type.tINVALID;
+        if (varTypeCtx.ARRAY() != null) {
+            type = getArrayType(typeTokenType);
         } else {
-            defineField(ctx, currFieldId);
+            type = getType(typeTokenType);
         }
-    }
-
-    @Override
-    public void exitStringType(final StringTypeContext ctx) {
-        defineField(ctx, currFieldId);
-    }
-
-    void defineGroupVar(final String grpName, final Token nameToken) {
-        final FieldSymbol var = new FieldSymbol(nameToken.getText(), Symbol.Type.tGROUP_REF, grpName);
-        currentScope.define(var); // Define symbol in current scope
-    }
-
-    void defineField(final TypeContext varTypeCtx, final Token nameToken) {
-        final int typeTokenType = varTypeCtx.start.getType();
-        final Symbol.Type type = getType(typeTokenType);
-        final VariableSymbol var = new VariableSymbol(nameToken.getText(), type);
+        FieldSymbol var = null;
+        if ((type == Type.tGROUP_REF) || (type == Type.tGROUP_REF_ARRAY)) {
+            var = new FieldSymbol(nameToken.getText(), type, varTypeCtx.type().getText());
+        } else {
+            var = new FieldSymbol(nameToken.getText(), type);
+        }
         currentScope.define(var); // Define symbol in current scope
     }
 

@@ -1,15 +1,15 @@
 FORM test
 FIELDS
 f1 : STRING[10]
-f2 : 1..10
+f2 : ARRAY [10] OF 1..10
 f3 : OPTION [2] { yes, no, manafx}
 RULES
 f1 = 1 + ((10 + "kuku") + "dud")
 IF (f1 == "110kuku") THEN 
-f2 = 10
+f2[1] = 10
 END IF
 f3 = [manafx]
 IF f3 == [yes,manafx] THEN
-f2 = 11
+f2[1] = 11
 END IF
 END FORM

@@ -21,6 +21,7 @@ import main.antlr.eFrmParser.GroupDeclContext;
 import main.antlr.eFrmParser.GroupTypeContext;
 import main.antlr.eFrmParser.HeaderStatContext;
 import main.antlr.eFrmParser.IDExprContext;
+import main.antlr.eFrmParser.IdRefContext;
 import main.antlr.eFrmParser.IfContStatContext;
 import main.antlr.eFrmParser.InfoStatContext;
 import main.antlr.eFrmParser.IntegerLiteralExprContext;
@@ -65,10 +66,12 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
     private static class FieldDef {
         private final String label;
         private final String id;
+        private final Symbol symbol;
 
-        public FieldDef(final String label, final String id) {
+        public FieldDef(final String label, final String id, final Symbol symbol) {
             this.label = label;
             this.id = id;
+            this.symbol = symbol;
         }
 
         public String getLabel() {
@@ -77,6 +80,10 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
 
         public String getId() {
             return id;
+        }
+
+        public Symbol getSymbol() {
+            return symbol;
         }
 
     }
@@ -88,13 +95,13 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
     }
 
     private String genSetter(final FieldDeclContext fdc) {
-        final ST st = group.getInstanceOf("setter");
+        final ST st = group.getInstanceOf(fdc.ARRAY() == null ? "setter" : "arraySetter");
         st.add("id", fdc.labeledId().ID().getText());
         return st.render();
     }
 
     private String genGetter(final FieldDeclContext fdc) {
-        final ST st = group.getInstanceOf("getter");
+        final ST st = group.getInstanceOf(fdc.ARRAY() == null ? "getter" : "arrayGetter");
         st.add("id", fdc.labeledId().ID().getText());
         return st.render();
     }
@@ -243,20 +250,30 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
 
     @Override
     public String visitIDExpr(final IDExprContext ctx) {
-        final Symbol s = currentScope.resolve(ctx.ID(0).getText());
+        final Symbol s = currentScope.resolve(ctx.idRef(0).ID().getText());
         final StringBuilder sb = new StringBuilder();
         if (s instanceof VariableSymbol) {
-            return ctx.ID(0).getText();
+            return ctx.idRef(0).ID().getText();
         } else {
             sb.append("this.");
-            for (int i = 0; i < ctx.ID().size(); i++) {
-                sb.append(ctx.ID(i).getText());
-                if (i < (ctx.ID().size() - 1)) {
+            for (int i = 0; i < ctx.idRef().size(); i++) {
+                sb.append(visitIdRef(ctx.idRef(i)));
+                if (i < (ctx.idRef().size() - 1)) {
                     sb.append(".");
                 }
             }
             return sb.toString();
         }
+    }
+
+    @Override
+    public String visitIdRef(final IdRefContext ctx) {
+        final StringBuilder sb = new StringBuilder();
+        sb.append(ctx.ID().getText());
+        if (ctx.INT() != null) {
+            sb.append(String.format("[%s]", ctx.INT().getText()));
+        }
+        return sb.toString();
     }
 
     @Override
@@ -343,14 +360,29 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
 
     @Override
     public String visitRenderStat(final RenderStatContext ctx) {
-        return "els.push(this." + ctx.ID().getText() + ".render(els.pop()));";
+        return "els.push(this." + visit(ctx.idRef()) + ".render(els.pop()));";
     }
 
     @Override
     public String visitFieldsSection(final FieldsSectionContext ctx) {
         final ST st = group.getInstanceOf("fieldsSection");
         for (final eFrmParser.FieldDeclContext fdc : ctx.fieldDecl()) {
-            st.add("field", visit(fdc));
+            final StringBuilder sb = new StringBuilder();
+            sb.append("this." + fdc.labeledId().ID().getText() + " = ");
+            if (fdc.ARRAY() != null) {
+                final int c = Integer.parseInt(fdc.INT().getText());
+                sb.append("[");
+                for (int i = 0; i < c; i++) {
+                	String fr = visit(fdc);
+                    sb.append(fr + ',');
+                }
+                sb.deleteCharAt(sb.lastIndexOf(","));
+                sb.append("];");
+                st.add("field", sb.toString());
+            } else {
+                sb.append(visit(fdc) + ';');
+                st.add("field", sb.toString());
+            }
         }
         return st.render();
     }
@@ -363,7 +395,8 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
     protected FieldDef getFieldDef(final LabeledIdContext ctx) {
         final String label = ctx.STRING() == null ? ctx.ID().getText() : sanitiseString(ctx.STRING().getText());
         final String id = ctx.ID().getText();
-        return new FieldDef(label, id);
+        final Symbol s = currentScope.resolve(ctx.ID().getText());
+        return new FieldDef(label, id, s);
     }
 
     @Override
@@ -428,9 +461,9 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
 
     @Override
     public String visitGroupType(final GroupTypeContext ctx) {
-        return getCurrFieldId() + ": new " +
+        return "new " +
             getGroupContext(ctx.ID().getText()).ID().getText() +
-            "('" + getCurrFieldId() + "','" + getCurrFieldLabel() + "'),";
+            "('" + getCurrFieldId() + "','" + getCurrFieldLabel() + "')";
     }
 
     @Override

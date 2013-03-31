@@ -11,8 +11,8 @@ var $id$ = Class.extend({
 	init: function() {
 		this.id = "$id$";
 		this.label = "$label$";		
+		$fields$
 	},
-	$fields$
 	render: function(el) {	
 		if (el) {
 			this.el = el;
@@ -27,7 +27,15 @@ var $id$ = Class.extend({
 				els.push(jQuery("<div class='row-fluid'></div>").appendTo(els.pop())); 
 				els.push(jQuery("<div class='span12'></div>").appendTo(els.pop()));
 				this[f].render(els.pop());
-			}			
+			}
+			if (Object.prototype.toString.call(this[f]) === '[object Array]' && (this[f][0] instanceof Field || this[f][0] instanceof Group)) {
+				for (var i = 0; i < this[f].length; i++) {
+					els.push(this.el);
+					els.push(jQuery("<div class='row-fluid'></div>").appendTo(els.pop())); 
+					els.push(jQuery("<div class='span12'></div>").appendTo(els.pop()));
+					this[f][i].render(els.pop());
+				}
+			}
 		}
 		$endif$
 		

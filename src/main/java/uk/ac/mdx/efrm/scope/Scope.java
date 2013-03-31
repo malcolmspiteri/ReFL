@@ -11,7 +11,7 @@ public interface Scope {
     public void define(Symbol sym);
 
     /** Define a sub-scope in the current scope */
-    public void defineSubScope(String name, Scope scope);
+    public void addSubScope(String name, Scope scope);
 
     /** Look up name in this scope or in enclosing scope if not here */
     public Symbol resolve(String name);

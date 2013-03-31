@@ -1,0 +1,14 @@
+FORM test
+FIELDS
+f1 "Enter a number" : STRING[10]
+f2 : ARRAY [2] OF 1..10
+f3 : OPTION [2] { yes, no, manafx}
+GROUP g1
+FIELDS
+g1f1 : 1..2
+g1f2 "hello" : 1..2
+END GROUP
+f4 : ARRAY [2] OF g1
+RULES
+f4[1].g1f2 = 1
+END FORM
