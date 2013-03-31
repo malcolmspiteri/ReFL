@@ -1,3 +1,3 @@
 cell(size) ::= <<
- cellEl = jQuery("<div class='span$size$'></div>").appendTo(rowEl);
+els.push(jQuery("<div class='span$size$'></div>").appendTo(els.pop()));
 >>

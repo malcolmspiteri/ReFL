@@ -1,6 +1,6 @@
 form(id, label, fields, layout, groups, setter, getter, rules) ::= <<
 <div class="container-fluid">
-	<form id="$id$-form"/>
+	<form id="$id$-form" class="form-horizontal"/>
 </div>
 <script type="text/javascript">
 	//<![CDATA[
@@ -17,16 +17,16 @@ var $id$ = Class.extend({
 		if (el) {
 			this.el = el;
 		}
-		var rowEl = null;
-		var cellEl = null;
+		var els = [];
 		$if(layout)$
 		$layout$
 		$else$
 		for ( var f in this ) {
 			if (this[f] instanceof Field || this[f] instanceof Group) {
-				rowEl = jQuery("<div class='row-fluid'></div>").appendTo(this.el); 
-				cellEl = jQuery("<div class='span12'></div>").appendTo(rowEl)
-				this[f].render(rowEl);
+				els.push(this.el);
+				els.push(jQuery("<div class='row-fluid'></div>").appendTo(els.pop())); 
+				els.push(jQuery("<div class='span12'></div>").appendTo(els.pop()));
+				this[f].render(els.pop());
 			}			
 		}
 		$endif$

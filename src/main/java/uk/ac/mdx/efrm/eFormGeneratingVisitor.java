@@ -183,6 +183,7 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
                     continue;
                 }
                 final StringBuilder sb = new StringBuilder();
+                sb.append("els.push(this.el);");
                 if (gridState.currCol == 1) {
                     sb.append(newRow());
                 }
@@ -342,7 +343,7 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
 
     @Override
     public String visitRenderStat(final RenderStatContext ctx) {
-        return " this." + ctx.ID().getText() + ".render(cellEl);";
+        return "els.push(this." + ctx.ID().getText() + ".render(els.pop()));";
     }
 
     @Override
