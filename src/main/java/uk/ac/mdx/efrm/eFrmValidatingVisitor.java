@@ -2,7 +2,6 @@ package uk.ac.mdx.efrm;
 
 import main.antlr.eFrmBaseVisitor;
 import main.antlr.eFrmParser.ArithmeticExprContext;
-import main.antlr.eFrmParser.AskStatContext;
 import main.antlr.eFrmParser.AssignStatContext;
 import main.antlr.eFrmParser.BracketedExprContext;
 import main.antlr.eFrmParser.ElseBlockContext;
@@ -15,7 +14,6 @@ import main.antlr.eFrmParser.HeaderStatContext;
 import main.antlr.eFrmParser.IDExprContext;
 import main.antlr.eFrmParser.IfContStatContext;
 import main.antlr.eFrmParser.IntegerLiteralExprContext;
-import main.antlr.eFrmParser.NoAskStatContext;
 import main.antlr.eFrmParser.OptionExprContext;
 import main.antlr.eFrmParser.RenderStatContext;
 import main.antlr.eFrmParser.StatContext;
@@ -25,12 +23,11 @@ import org.antlr.v4.runtime.tree.ParseTreeProperty;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import uk.ac.mdx.efrm.error.eFrmErrorHandler;
+import uk.ac.mdx.efrm.scope.FieldSymbol;
 import uk.ac.mdx.efrm.scope.GroupSymbol;
 import uk.ac.mdx.efrm.scope.Scope;
 import uk.ac.mdx.efrm.scope.Symbol;
-import uk.ac.mdx.efrm.scope.Symbol.Section;
 import uk.ac.mdx.efrm.scope.Symbol.Type;
-import uk.ac.mdx.efrm.scope.VariableSymbol;
 
 public class eFrmValidatingVisitor extends eFrmBaseVisitor<Symbol.Type> {
 
@@ -74,7 +71,6 @@ public class eFrmValidatingVisitor extends eFrmBaseVisitor<Symbol.Type> {
 
     /****************** RULES ******************/
 
-    
     @Override
     public Symbol.Type visitIDExpr(final IDExprContext ctx) {
         Symbol.Type ret = null;
@@ -83,7 +79,7 @@ public class eFrmValidatingVisitor extends eFrmBaseVisitor<Symbol.Type> {
         for (final TerminalNode tn : ctx.ID()) {
             final String name = tn.getSymbol().getText();
             if ((prevVar != null) && (prevVar.getType() == Symbol.Type.tGROUP_REF)) {
-                final String grpName = ((VariableSymbol) prevVar).getGrpName();
+                final String grpName = ((FieldSymbol) prevVar).getGrpName();
                 scope = scope.getSubScope(grpName);
             }
             final Symbol var = scope.resolve(name);
@@ -100,17 +96,17 @@ public class eFrmValidatingVisitor extends eFrmBaseVisitor<Symbol.Type> {
         return ret;
     }
 
-//    @Override
-//	public Type visitNoAskStat(NoAskStatContext ctx) {
-//    	final String name = ctx.ID().getSymbol().getText();
-//    	final Symbol var = currentScope.resolve(name);
-//    	if (var == null || var.getSection() == Section.RULES) {
-//    		errorHandler.addError(ctx.expr().getSymbol(), "no such field: " + name);
-//    	}
-//		return super.visitNoAskStat(ctx);
-//	}
+    // @Override
+    // public Type visitNoAskStat(NoAskStatContext ctx) {
+    // final String name = ctx.ID().getSymbol().getText();
+    // final Symbol var = currentScope.resolve(name);
+    // if (var == null || var.getSection() == Section.RULES) {
+    // errorHandler.addError(ctx.expr().getSymbol(), "no such field: " + name);
+    // }
+    // return super.visitNoAskStat(ctx);
+    // }
 
-	@Override
+    @Override
     public Type visitOptionExpr(final OptionExprContext ctx) {
         return Type.tOPTION;
     }

@@ -9,7 +9,7 @@ public class GroupSymbol extends Symbol implements Scope {
     Scope enclosingScope;
 
     public GroupSymbol(final String name, final Type retType, final Scope enclosingScope) {
-        super(name, retType, Section.FIELDS);
+        super(name, retType);
         this.enclosingScope = enclosingScope;
     }
 

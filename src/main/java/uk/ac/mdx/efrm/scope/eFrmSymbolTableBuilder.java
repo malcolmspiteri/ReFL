@@ -18,8 +18,6 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 
-import uk.ac.mdx.efrm.scope.Symbol.Section;
-
 public class eFrmSymbolTableBuilder extends eFrmBaseListener {
 
     public static Symbol.Type getType(final int tokenType) {
@@ -100,12 +98,12 @@ public class eFrmSymbolTableBuilder extends eFrmBaseListener {
 
     @Override
     public void exitOptionType(final OptionTypeContext ctx) {
-        defineVar(ctx, currFieldId);
+        defineField(ctx, currFieldId);
     }
 
     @Override
     public void exitNumberRangeType(final NumberRangeTypeContext ctx) {
-        defineVar(ctx, currFieldId);
+        defineField(ctx, currFieldId);
     }
 
     @Override
@@ -114,32 +112,31 @@ public class eFrmSymbolTableBuilder extends eFrmBaseListener {
         if (grpSymbol != null) {
             defineGroupVar(ctx.ID().getText(), currFieldId);
         } else {
-            defineVar(ctx, currFieldId);
+            defineField(ctx, currFieldId);
         }
     }
 
     @Override
     public void exitStringType(final StringTypeContext ctx) {
-        defineVar(ctx, currFieldId);
+        defineField(ctx, currFieldId);
     }
 
     void defineGroupVar(final String grpName, final Token nameToken) {
-        final VariableSymbol var = new VariableSymbol(nameToken.getText(), Symbol.Type.tGROUP_REF, Section.FIELDS,
-            grpName);
+        final FieldSymbol var = new FieldSymbol(nameToken.getText(), Symbol.Type.tGROUP_REF, grpName);
         currentScope.define(var); // Define symbol in current scope
     }
 
-    void defineVar(final TypeContext varTypeCtx, final Token nameToken) {
+    void defineField(final TypeContext varTypeCtx, final Token nameToken) {
         final int typeTokenType = varTypeCtx.start.getType();
         final Symbol.Type type = getType(typeTokenType);
-        final VariableSymbol var = new VariableSymbol(nameToken.getText(), type, Section.FIELDS);
+        final VariableSymbol var = new VariableSymbol(nameToken.getText(), type);
         currentScope.define(var); // Define symbol in current scope
     }
 
     void defineVar(final VarTypeContext varTypeCtx, final Token nameToken) {
         final int typeTokenType = varTypeCtx.start.getType();
         final Symbol.Type type = getType(typeTokenType);
-        final VariableSymbol var = new VariableSymbol(nameToken.getText(), type, Section.RULES);
+        final VariableSymbol var = new VariableSymbol(nameToken.getText(), type);
         currentScope.define(var); // Define symbol in current scope
     }
 

@@ -48,7 +48,7 @@ import org.stringtemplate.v4.STGroupDir;
 
 import uk.ac.mdx.efrm.scope.Scope;
 import uk.ac.mdx.efrm.scope.Symbol;
-import uk.ac.mdx.efrm.scope.Symbol.Section;
+import uk.ac.mdx.efrm.scope.VariableSymbol;
 
 class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
 
@@ -245,7 +245,7 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
     public String visitIDExpr(final IDExprContext ctx) {
         final Symbol s = currentScope.resolve(ctx.ID(0).getText());
         final StringBuilder sb = new StringBuilder();
-        if (s.getSection() == Section.RULES) {
+        if (s instanceof VariableSymbol) {
             return ctx.ID(0).getText();
         } else {
             sb.append("this.");
@@ -482,14 +482,14 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
         return stf.render();
     }
 
-	@Override
-	public String visitNoAskStat(NoAskStatContext ctx) {
-		return visit(ctx.expr()) + ".disable();";
-	}
+    @Override
+    public String visitNoAskStat(final NoAskStatContext ctx) {
+        return visit(ctx.expr()) + ".disable();";
+    }
 
-	@Override
-	public String visitAskStat(AskStatContext ctx) {
-		return visit(ctx.expr()) + ".enable();";
-	}
-    
+    @Override
+    public String visitAskStat(final AskStatContext ctx) {
+        return visit(ctx.expr()) + ".enable();";
+    }
+
 }

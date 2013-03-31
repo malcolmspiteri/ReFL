@@ -4,7 +4,6 @@ import java.util.Stack;
 
 import main.antlr.eFrmBaseListener;
 import main.antlr.eFrmParser.ArithmeticExprContext;
-import main.antlr.eFrmParser.AskStatContext;
 import main.antlr.eFrmParser.AssignStatContext;
 import main.antlr.eFrmParser.EqualityExprContext;
 import main.antlr.eFrmParser.FormContext;
@@ -21,11 +20,11 @@ import org.antlr.v4.runtime.tree.ParseTreeProperty;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import uk.ac.mdx.efrm.error.eFrmErrorHandler;
+import uk.ac.mdx.efrm.scope.FieldSymbol;
 import uk.ac.mdx.efrm.scope.GroupSymbol;
 import uk.ac.mdx.efrm.scope.Scope;
 import uk.ac.mdx.efrm.scope.Symbol;
 import uk.ac.mdx.efrm.scope.Symbol.Type;
-import uk.ac.mdx.efrm.scope.VariableSymbol;
 
 public class eFrmValidator extends eFrmBaseListener {
 
@@ -70,7 +69,7 @@ public class eFrmValidator extends eFrmBaseListener {
         for (final TerminalNode tn : ctx.ID()) {
             final String name = tn.getSymbol().getText();
             if ((prevVar != null) && (prevVar.getType() == Symbol.Type.tGROUP_REF)) {
-                final String grpName = ((VariableSymbol) prevVar).getGrpName();
+                final String grpName = ((FieldSymbol) prevVar).getGrpName();
                 scope = scope.getSubScope(grpName);
             }
             final Symbol var = scope.resolve(name);
