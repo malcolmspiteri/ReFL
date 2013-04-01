@@ -3,20 +3,7 @@ package uk.ac.mdx.efrm.scope;
 public class Symbol {
     public static enum Type {
         tINVALID, tGROUP, tGROUP_REF, tNUMBER, tSTRING, tOPTION, tBOOLEAN,
-        tGROUP_REF_ARRAY(true), tNUMBER_ARRAY(true), tSTRING_ARRAY(true), tOPTION_ARRAY(true);
-
-        Type() {
-        }
-
-        Type(final boolean array) {
-            this.array = array;
-        }
-
-        private boolean array = false;
-
-        public boolean isArray() {
-            return array;
-        }
+        tGROUP_REF_ARRAY, tNUMBER_ARRAY, tSTRING_ARRAY, tOPTION_ARRAY;
 
     }
 

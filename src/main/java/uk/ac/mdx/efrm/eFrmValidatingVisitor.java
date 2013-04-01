@@ -31,6 +31,7 @@ import main.antlr.eFrmParser.WhileStatContext;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 
 import uk.ac.mdx.efrm.error.eFrmErrorHandler;
+import uk.ac.mdx.efrm.scope.ArrayFieldSymbol;
 import uk.ac.mdx.efrm.scope.GroupSymbol;
 import uk.ac.mdx.efrm.scope.Scope;
 import uk.ac.mdx.efrm.scope.Symbol;
@@ -123,13 +124,13 @@ public class eFrmValidatingVisitor extends eFrmBaseVisitor<Symbol.Type> {
                 }
 
             }
-            if ((ctx.expr() != null) && !var.getType().isArray()) {
+            if ((ctx.expr() != null) && !(var instanceof ArrayFieldSymbol)) {
                 errorHandler.addError(ctx.ID().getSymbol(), name + " is not an array");
             }
-            if ((ctx.expr() == null) && var.getType().isArray()) {
-                errorHandler.addError(ctx.ID().getSymbol(), name + " is an array");
+            if ((ctx.expr() == null) && var instanceof ArrayFieldSymbol) {
+                //errorHandler.addError(ctx.ID().getSymbol(), name + " is an array");
             }
-            if (var.getType().isArray() && (ctx.expr() != null)) {
+            if (var instanceof ArrayFieldSymbol && (ctx.expr() != null)) {
                 return toNonArrayType(var.getType());
             } else {
                 return var.getType();

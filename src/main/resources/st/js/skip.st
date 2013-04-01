@@ -1,3 +1,3 @@
 skip() ::= <<
-jQuery("<span>&nbsp;</span>").appendTo(el.pop());
+jQuery("<span>&nbsp;</span>").appendTo(els.pop());
 >>

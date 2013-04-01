@@ -104,16 +104,22 @@ public class eFrmSymbolTableBuilder extends eFrmBaseListener {
     void defineField(final FieldDeclContext varTypeCtx, final Token nameToken) {
         final int typeTokenType = varTypeCtx.type().start.getType();
         Symbol.Type type = Type.tINVALID;
+        Symbol var = null;
         if (varTypeCtx.ARRAY() != null) {
             type = getArrayType(typeTokenType);
+            int size = Integer.parseInt(varTypeCtx.INT().getText());
+            if (type == Type.tGROUP_REF_ARRAY) {
+                var = new ArrayFieldSymbol(nameToken.getText(), type, size, varTypeCtx.type().getText());
+            } else {
+                var = new ArrayFieldSymbol(nameToken.getText(), type, size);
+            }
         } else {
             type = getType(typeTokenType);
-        }
-        FieldSymbol var = null;
-        if ((type == Type.tGROUP_REF) || (type == Type.tGROUP_REF_ARRAY)) {
-            var = new FieldSymbol(nameToken.getText(), type, varTypeCtx.type().getText());
-        } else {
-            var = new FieldSymbol(nameToken.getText(), type);
+            if (type == Type.tGROUP_REF) {
+                var = new FieldSymbol(nameToken.getText(), type, varTypeCtx.type().getText());
+            } else {
+                var = new FieldSymbol(nameToken.getText(), type);
+            }
         }
         currentScope.define(var); // Define symbol in current scope
     }

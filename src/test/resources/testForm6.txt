@@ -1,0 +1,14 @@
+FORM Invoice
+FIELDS
+  GROUP gInvoiceItem
+    FIELDS
+      code "Product Code" : STRING[10]
+      quantity "Quantity" : 1..100
+      unitp "@" : 1..100
+      price "Price" : 1..1000
+  END GROUP
+  items : ARRAY [2] OF gInvoiceItem
+LAYOUT
+  TABLE "Code" "Quantity" "Unit Price" "Price"
+  items
+END FORM
