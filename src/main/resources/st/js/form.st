@@ -1,6 +1,6 @@
 form(id, label, fields, layout, groups, setter, getter, rules) ::= <<
 <div class="container-fluid">
-	<form id="$id$-form" class="form-horizontal"/>
+	<form id="$id$-form"/>
 </div>
 <script type="text/javascript">
 	//<![CDATA[
@@ -62,9 +62,15 @@ var $id$ = Class.extend({
 		return ret;
 	},
 	checkRules: function() {
+	    console.log("Checking rules: " + this.id);
 		for ( var f in this ) {
 			if (this[f] instanceof Field || this[f] instanceof Group) {
 				this[f].checkRules();
+			}			
+			if (Object.prototype.toString.call(this[f]) === '[object Array]' && (this[f][0] instanceof Field || this[f][0] instanceof Group)) {
+				for (var i = 0; i < this[f].length; i++) {
+					this[f][i].checkRules();
+				}
 			}			
 		}
 		$rules$

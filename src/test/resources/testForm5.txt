@@ -1,0 +1,11 @@
+FORM test
+FIELDS
+GROUP g1
+FIELDS
+g1f1 : ARRAY [3] OF 1..2
+END GROUP
+f1 : g1
+RULES
+testVar : NUMBER = 2
+f1.g1f1[testVar] = 6
+END FORM

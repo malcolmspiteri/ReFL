@@ -27,6 +27,7 @@ import main.antlr.eFrmParser.InfoStatContext;
 import main.antlr.eFrmParser.IntegerLiteralExprContext;
 import main.antlr.eFrmParser.LabeledIdContext;
 import main.antlr.eFrmParser.LayoutSectionContext;
+import main.antlr.eFrmParser.LessThanExprContext;
 import main.antlr.eFrmParser.NewRowStatContext;
 import main.antlr.eFrmParser.NoAskStatContext;
 import main.antlr.eFrmParser.NumberRangeTypeContext;
@@ -41,6 +42,7 @@ import main.antlr.eFrmParser.StringLiteralExprContext;
 import main.antlr.eFrmParser.StringTypeContext;
 import main.antlr.eFrmParser.VarDecStatContext;
 import main.antlr.eFrmParser.VarDeclContext;
+import main.antlr.eFrmParser.WhileStatContext;
 
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 import org.stringtemplate.v4.ST;
@@ -190,7 +192,6 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
                     continue;
                 }
                 final StringBuilder sb = new StringBuilder();
-                sb.append("els.push(this.el);");
                 if (gridState.currCol == 1) {
                     sb.append(newRow());
                 }
@@ -270,8 +271,8 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
     public String visitIdRef(final IdRefContext ctx) {
         final StringBuilder sb = new StringBuilder();
         sb.append(ctx.ID().getText());
-        if (ctx.INT() != null) {
-            sb.append(String.format("[%s]", ctx.INT().getText()));
+        if (ctx.expr() != null) {
+            sb.append(String.format("[%s]", addValIfNecessary(visit(ctx.expr()))));
         }
         return sb.toString();
     }
@@ -360,7 +361,7 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
 
     @Override
     public String visitRenderStat(final RenderStatContext ctx) {
-        return "els.push(this." + visit(ctx.idRef()) + ".render(els.pop()));";
+        return "this." + visit(ctx.idRef()) + ".render(els.pop());";
     }
 
     @Override
@@ -501,6 +502,12 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
     }
 
     @Override
+    public String visitLessThanExpr(final LessThanExprContext ctx) {
+        return String.format("lessThan(%s,%s)", addValIfNecessary(visit(ctx.expr(0))),
+            addValIfNecessary(visit(ctx.expr(1))));
+    }
+
+    @Override
     public String visitIfContStat(final IfContStatContext ctx) {
         final ST stf = group.getInstanceOf("ifStmt");
         stf.add("expr", visit(ctx.expr()));
@@ -511,6 +518,16 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
             for (final StatContext sc : ctx.elseBlock().stat()) {
                 stf.add("stat2", visit(sc));
             }
+        }
+        return stf.render();
+    }
+
+    @Override
+    public String visitWhileStat(final WhileStatContext ctx) {
+        final ST stf = group.getInstanceOf("whileStmt");
+        stf.add("expr", visit(ctx.expr()));
+        for (final StatContext sc : ctx.stat()) {
+            stf.add("stat1", visit(sc));
         }
         return stf.render();
     }

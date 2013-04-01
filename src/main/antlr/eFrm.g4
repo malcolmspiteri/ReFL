@@ -35,6 +35,7 @@ layout			: idRef #RenderStat
 stat			: expr '=' expr NL #AssignStat  
 				| varDecl NL #VarDecStat
 				| IF expr THEN NL+ stat+ elseBlock? 'END IF' NL #IfContStat
+				| 'WHILE' expr NL+ stat+ 'END WHILE' NL #WhileStat
 				| NOASK expr NL #NoAskStat
 				| ASK expr NL #AskStat
 				;
@@ -51,12 +52,14 @@ expr			: idRef ('.' idRef)* #IDExpr
 				| '[' ID (',' ID)* ']' #OptionExpr
 				| '(' expr ')' #BracketedExpr
 				| expr '==' expr #EqualityExpr				
+				| expr '<' expr #LessThanExpr
 				| expr op=('+'|'-'|'*'|'/') expr #ArithmeticExpr
 				| INT #IntegerLiteralExpr
 				| STRING #StringLiteralExpr
 				;
 
-idRef			: ID ('[' INT ']')? ;
+idRef			: ID ('[' expr ']')? ;
+
 
 // Keywords
 FORM			: 'FORM' ;

@@ -44,9 +44,15 @@ var $id$ = Group.extend({
 		return ret;
 	},
 	checkRules: function() {
+	    console.log("Checking rules: " + this.id);
 		for ( var f in this ) {
 			if (this[f] instanceof Field || this[f] instanceof Group) {
 				this[f].checkRules();
+			}			
+			if (Object.prototype.toString.call(this[f]) === '[object Array]' && (this[f][0] instanceof Field || this[f][0] instanceof Group)) {
+				for (var i = 0; i < this[f].length; i++) {
+					this[f][i].checkRules();
+				}
 			}			
 		}
 		$rules$

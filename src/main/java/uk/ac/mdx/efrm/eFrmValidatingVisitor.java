@@ -1,6 +1,9 @@
 package uk.ac.mdx.efrm;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Stack;
 
 import main.antlr.eFrmBaseVisitor;
@@ -18,10 +21,12 @@ import main.antlr.eFrmParser.IDExprContext;
 import main.antlr.eFrmParser.IdRefContext;
 import main.antlr.eFrmParser.IfContStatContext;
 import main.antlr.eFrmParser.IntegerLiteralExprContext;
+import main.antlr.eFrmParser.LessThanExprContext;
 import main.antlr.eFrmParser.OptionExprContext;
 import main.antlr.eFrmParser.RenderStatContext;
 import main.antlr.eFrmParser.StatContext;
 import main.antlr.eFrmParser.StringLiteralExprContext;
+import main.antlr.eFrmParser.WhileStatContext;
 
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 
@@ -73,7 +78,7 @@ public class eFrmValidatingVisitor extends eFrmBaseVisitor<Symbol.Type> {
 
     /****************** RULES ******************/
 
-    private final Stack<String> ancestors = new Stack<String>();
+    private List<String> ancestors = new ArrayList<String>();
 
     private String ancestors() {
         final Iterator<String> iter = ancestors.iterator();
@@ -90,7 +95,7 @@ public class eFrmValidatingVisitor extends eFrmBaseVisitor<Symbol.Type> {
         Symbol.Type ret = null;
         for (int i = 0; i < ctx.idRef().size(); i++) {
             ret = visit(ctx.idRef(i));
-            ancestors.push(ctx.idRef(i).ID().getText());
+            ancestors.add(ctx.idRef(i).ID().getText());
         }
         ancestors.clear();
         return ret;
@@ -107,13 +112,24 @@ public class eFrmValidatingVisitor extends eFrmBaseVisitor<Symbol.Type> {
             if (var instanceof GroupSymbol) {
                 errorHandler.addError(ctx.ID().getSymbol(), name + " is not a variable or field");
             }
-            if ((ctx.INT() != null) && !var.getType().isArray()) {
+            if (ctx.expr() != null) {
+            	// Temporary stash ancestors
+            	String[] tmp = ancestors.toArray(new String[] {});
+            	ancestors.clear();
+                final Symbol.Type e = visit(ctx.expr());
+                ancestors.addAll(Arrays.asList(tmp));
+                if (e != Type.tNUMBER) {
+                	errorHandler.addError(ctx.expr().getStart(), "dimension is not a number");
+                }
+
+            }
+            if ((ctx.expr() != null) && !var.getType().isArray()) {
                 errorHandler.addError(ctx.ID().getSymbol(), name + " is not an array");
             }
-            if ((ctx.INT() == null) && var.getType().isArray()) {
+            if ((ctx.expr() == null) && var.getType().isArray()) {
                 errorHandler.addError(ctx.ID().getSymbol(), name + " is an array");
             }
-            if (var.getType().isArray() && (ctx.INT() != null)) {
+            if (var.getType().isArray() && (ctx.expr() != null)) {
                 return toNonArrayType(var.getType());
             } else {
                 return var.getType();
@@ -201,8 +217,31 @@ public class eFrmValidatingVisitor extends eFrmBaseVisitor<Symbol.Type> {
     }
 
     @Override
+    public Symbol.Type visitLessThanExpr(final LessThanExprContext ctx) {
+        final Symbol.Type e1Type = visit(ctx.expr(0));
+        final Symbol.Type e2Type = visit(ctx.expr(1));
+        if (!(e1Type == Type.tNUMBER && e2Type == Type.tNUMBER) &&
+        	!(e1Type == Type.tSTRING && e2Type == Type.tSTRING)) {
+            errorHandler.addError(ctx.expr(1).getStart(), "Incompatible comparison");
+        }
+        return Type.tBOOLEAN;
+    }
+
+    @Override
     public Type visitBracketedExpr(final BracketedExprContext ctx) {
         return visit(ctx.expr());
+    }
+
+    @Override
+    public Type visitWhileStat(final WhileStatContext ctx) {
+        final Type et = visit(ctx.expr());
+        if (et != Type.tBOOLEAN) {
+            errorHandler.addError(ctx.expr().getStart(), "Invalid expression");
+        }
+        for (final StatContext sc : ctx.stat()) {
+            visit(sc);
+        }
+        return null;
     }
 
     @Override
@@ -214,7 +253,6 @@ public class eFrmValidatingVisitor extends eFrmBaseVisitor<Symbol.Type> {
         for (final StatContext sc : ctx.stat()) {
             visit(sc);
         }
-        visit(ctx.stat(0));
         if ((ctx.elseBlock() != null) && !ctx.elseBlock().isEmpty()) {
             visit(ctx.elseBlock());
         }
