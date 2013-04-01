@@ -231,45 +231,56 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
     }
     
     @Override
-    public String visitRenderStat(final RenderStatContext ctx) {
+    public String visitRenderStat(final RenderStatContext ctx) {    	
     	StringBuilder sb = new StringBuilder();
-    	Symbol s = currentScope.resolve(ctx.idRef().ID().getText());    	
-		if (s instanceof ArrayFieldSymbol && ctx.idRef().expr() == null) {    	
-	    	if (s.getCustomTypeName() != null) {
-	    		// Inline rendering of group
-	    		GroupDeclContext gdc = groups.get(s.getCustomTypeName());
-	    		Scope tmpScope = currentScope;
-	    		currentScope = scopes.get(gdc);
-	    		int size = ((ArrayFieldSymbol) s).getSize();
-	    		for (int i = 0; i < size; i++) {
-		            for (final eFrmParser.FieldDeclContext lc : gdc.fieldsSection().fieldDecl()) {
-		                sb.append(renderField(ctx.idRef().getText() + "[" + i + "]", lc));
-		            }
-	    		}
-	            currentScope = tmpScope;
-	    	} else {
-	    		// We have to render the whole damn array
-	    		// Let's get the size first
-	    		int size = ((ArrayFieldSymbol) s).getSize();
-	    		for (int i = 0; i < size; i++) {
-	    			sb.append(renderFormElement("this." + visit(ctx.idRef()) + "[" + i + "].render(els.pop());") + "\n");
-	    		}
-	    	}
-    	} else {
-	    	if (s.getCustomTypeName() != null) {
-	    		// Inline rendering of group
-	    		GroupDeclContext gdc = groups.get(s.getCustomTypeName());
-	    		Scope tmpScope = currentScope;
-	    		currentScope = scopes.get(gdc);
-	            for (final eFrmParser.FieldDeclContext lc : gdc.fieldsSection().fieldDecl()) {
-	                sb.append(renderField(ctx.idRef().getText(), lc));
-	            }
-	            currentScope = tmpScope;
-	    	} else {
-	    		sb.append(renderFormElement("this." + visit(ctx.idRef()) + ".render(els.pop());"));
-	    	}
-    	}
+    	Symbol s = currentScope.resolve(ctx.idRef().ID().getText());
+        if (gridState.mode() == GridMode.INLINE) {		                	
     	
+			if (s instanceof ArrayFieldSymbol && ctx.idRef().expr() == null) {    	
+		    	if (s.getCustomTypeName() != null) {
+		    		// Inline rendering of group
+		    		GroupDeclContext gdc = groups.get(s.getCustomTypeName());
+		    		Scope tmpScope = currentScope;
+		    		currentScope = scopes.get(gdc);
+		    		int size = ((ArrayFieldSymbol) s).getSize();
+		    		for (int i = 0; i < size; i++) {
+			            for (final eFrmParser.FieldDeclContext lc : gdc.fieldsSection().fieldDecl()) {
+			                sb.append(renderField(ctx.idRef().getText() + "[" + i + "]", lc));		                	
+			            }
+		    		}
+		            currentScope = tmpScope;
+		    	} else {
+		    		// We have to render the whole damn array
+		    		// Let's get the size first
+		    		int size = ((ArrayFieldSymbol) s).getSize();
+		    		for (int i = 0; i < size; i++) {
+		    			sb.append(renderFormElement("this." + visit(ctx.idRef()) + "[" + i + "].render(els.pop());") + "\n");
+		    		}
+		    	}
+	    	} else {
+		    	if (s.getCustomTypeName() != null) {
+		    		// Inline rendering of group
+		    		GroupDeclContext gdc = groups.get(s.getCustomTypeName());
+		    		Scope tmpScope = currentScope;
+		    		currentScope = scopes.get(gdc);
+		            for (final eFrmParser.FieldDeclContext lc : gdc.fieldsSection().fieldDecl()) {
+		                sb.append(renderField(ctx.idRef().getText(), lc));
+		            }
+		            currentScope = tmpScope;
+		    	} else {
+		    		sb.append(renderFormElement("this." + visit(ctx.idRef()) + ".render(els.pop());"));
+		    	}
+	    	}
+        } else {
+			if (s instanceof ArrayFieldSymbol && ctx.idRef().expr() == null) {
+	    		int size = ((ArrayFieldSymbol) s).getSize();
+	    		for (int i = 0; i < size; i++) {
+	            	sb.append(renderFormElement("this." + visit(ctx.idRef()) + "[" + i + "].render(els.pop());"));
+	    		}				
+			} else {
+	    		sb.append(renderFormElement("this." + visit(ctx.idRef()) + ".render(els.pop());"));				
+			}        	
+        }
     	return sb.toString();
     }
 
@@ -282,6 +293,11 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
     	dgs.currCol(1);
         for (int i = 0; i < ctx.INT().size(); i++) {
         	dgs.colSizes.add(ctx.INT(i).getText());
+        }
+        if (ctx.INLINE() != null) {
+        	dgs.mode(GridMode.INLINE);
+        } else {
+        	dgs.mode(GridMode.BLOCK);        	
         }
         gridState = dgs;
         return ""; // nothing to generate
@@ -323,6 +339,11 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
             st.add("header", "<td><strong>" + sanitiseString(ctx.STRING(i).getText()) + "</strong></td>");
     	}
     	tgs.currCol(1);
+        if (ctx.INLINE() != null) {
+        	tgs.mode(GridMode.INLINE);
+        } else {
+        	tgs.mode(GridMode.BLOCK);        	
+        }
     	gridState = tgs;
 		return st.render();
 	}
@@ -428,7 +449,12 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
     private final Stack<GridState> gridStates = new Stack<GridState>();
 
     
+    private enum GridMode {
+    	BLOCK, INLINE
+    }
+    
     private interface GridState {
+    	
     	void incrementCurrCol();
     	
     	void numCols(int val);
@@ -442,6 +468,10 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
 	    String newRow();
 
 	    String newCell();
+	    
+	    GridMode mode();
+	    
+	    void mode(GridMode mode);
 	    
     }
     
@@ -495,6 +525,18 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
 	        return st.render();
 
 	    }
+
+        private GridMode mode;
+
+        @Override
+		public GridMode mode() {
+			return mode;
+		}
+
+		@Override
+		public void mode(GridMode mode) {
+			this.mode = mode;
+		}
 		
     }
 
@@ -543,6 +585,18 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
 	        return st.render();
 
 	    }
+
+        private GridMode mode;
+
+        @Override
+		public GridMode mode() {
+			return mode;
+		}
+
+		@Override
+		public void mode(GridMode mode) {
+			this.mode = mode;
+		}
 
     }
 

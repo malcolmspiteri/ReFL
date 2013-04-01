@@ -26,8 +26,8 @@ layoutSection	: LAYOUT NL (layout NL|NL)+ ;
 
 layout			: idRef #RenderStat 
 				| HEADER INT STRING #HeaderStat
-				| GRID num=INT+ #GridStat
-				| TABLE STRING+ #TableStat
+				| GRID (BLOCK|INLINE)? num=INT+ #GridStat
+				| TABLE (BLOCK|INLINE)? STRING+ #TableStat
 				| INFO STRING #InfoStat
 				| SKIP #SkipStat
 				| NEWROW #NewRowStat
@@ -79,6 +79,8 @@ THEN			: 'THEN' ;
 ELSE			: 'ELSE' ;
 NOASK	        : 'NOASK' ;
 ASK	       		: 'ASK' ;
+BLOCK			: 'BLOCK' ;
+INLINE			: 'INLINE' ;
 
 // Layout tokes
 LAYOUT			: 'LAYOUT' ;
