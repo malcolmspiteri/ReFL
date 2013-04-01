@@ -27,6 +27,7 @@ layoutSection	: LAYOUT NL (layout NL|NL)+ ;
 layout			: idRef #RenderStat 
 				| HEADER INT STRING #HeaderStat
 				| GRID num=INT+ #GridStat
+				| TABLE STRING+ #TableStat
 				| INFO STRING #InfoStat
 				| SKIP #SkipStat
 				| NEWROW #NewRowStat
@@ -86,6 +87,7 @@ HEADER			: 'HEADER' ;
 GRID			: 'GRID' ;
 NEWROW			: 'NEWROW' ;
 SKIP			: 'SKIP' ;
+TABLE			: 'TABLE' ;
 
 // Common tokens
 ID  			: LETTER (LETTER | [0-9])* ; // match identifiers

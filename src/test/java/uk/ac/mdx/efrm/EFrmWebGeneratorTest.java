@@ -14,7 +14,7 @@ public class EFrmWebGeneratorTest {
     @Test
     public void test() throws Exception {
         try {
-            final InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream("testForm5.txt");
+            final InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream("TestTableRender.txt");
 
             final eFrmGenerator generator = new eFrmGenerator();
             final String out = generator.generate(new InputStreamReader(is));

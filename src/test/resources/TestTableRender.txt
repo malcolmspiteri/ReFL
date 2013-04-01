@@ -1,0 +1,11 @@
+FORM TestTableRender
+FIELDS
+f1 : 1..2
+f2 : 1..2
+f3 : 1..2
+LAYOUT
+TABLE "F1" "F2" "F3"
+f1
+f2
+f3
+END FORM

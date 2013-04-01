@@ -40,6 +40,7 @@ import main.antlr.eFrmParser.SkipStatContext;
 import main.antlr.eFrmParser.StatContext;
 import main.antlr.eFrmParser.StringLiteralExprContext;
 import main.antlr.eFrmParser.StringTypeContext;
+import main.antlr.eFrmParser.TableStatContext;
 import main.antlr.eFrmParser.VarDecStatContext;
 import main.antlr.eFrmParser.VarDeclContext;
 import main.antlr.eFrmParser.WhileStatContext;
@@ -178,24 +179,84 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
     }
 
     @Override
+    public String visitRenderStat(final RenderStatContext ctx) {
+        return "this." + visit(ctx.idRef()) + ".render(els.pop());";
+    }
+
+    
+    @Override
+    public String visitGridStat(final GridStatContext ctx) {
+    	DefaultGridState dgs = new DefaultGridState();
+    	dgs.colSizes.clear();
+    	dgs.noCols = ctx.INT().size();
+    	dgs.currCol = 1;
+        for (int i = 0; i < ctx.INT().size(); i++) {
+        	dgs.colSizes.add(ctx.INT(i).getText());
+        }
+        gridState = dgs;
+        return ""; // nothing to generate
+    }
+
+    @Override
+    public String visitSkipStat(final SkipStatContext ctx) {
+        final ST st = group.getInstanceOf("skip");
+        return st.render();
+    }
+
+    @Override
+    public String visitNewRowStat(final NewRowStatContext ctx) {
+        gridState.currCol(1);
+        return null;
+    }
+
+    @Override
+    public String visitHeaderStat(final HeaderStatContext ctx) {
+        final ST st = group.getInstanceOf("header");
+        st.add("level", ctx.INT().getText());
+        st.add("text", sanitiseString(ctx.STRING().getText()));
+        return st.render();
+    }
+
+    @Override
+    public String visitInfoStat(final InfoStatContext ctx) {
+        final ST st = group.getInstanceOf("info");
+        st.add("text", sanitiseString(ctx.STRING().getText()));
+        return st.render();
+    }
+
+    @Override
+	public String visitTableStat(TableStatContext ctx) {
+    	TableGridState tgs = new TableGridState();
+    	tgs.numCols(ctx.STRING().size());
+        final ST st = group.getInstanceOf("table");
+    	for (int i = 0; i < ctx.STRING().size(); i++) {    		
+            st.add("header", "<td>" + sanitiseString(ctx.STRING(i).getText()) + "</td>");
+    	}
+    	tgs.currCol(1);
+    	gridState = tgs;
+		return st.render();
+	}
+
+	@Override
     public String visitLayoutSection(final LayoutSectionContext ctx) {
         if (gridState != null) {
-            gridStates.push(gridState);
+            gridStates.push(gridState);    			
         }
-        gridState = new GridState();
+        gridState = new DefaultGridState();
         try {
             final ST st = group.getInstanceOf("layout");
             for (final eFrmParser.LayoutContext lc : ctx.layout()) {
                 if ((lc instanceof GridStatContext)
-                    || (lc instanceof NewRowStatContext)) {
-                    visit(lc);
+                    || (lc instanceof NewRowStatContext)
+                    || (lc instanceof TableStatContext)) {
+                	st.add("stat", visit(lc));
                     continue;
                 }
                 final StringBuilder sb = new StringBuilder();
-                if (gridState.currCol == 1) {
-                    sb.append(newRow());
+                if (gridState.currCol() == 1) {
+                    sb.append(gridState.newRow());
                 }
-                sb.append(newCell());
+                sb.append(gridState.newCell());
                 sb.append(visit(lc));
                 st.add("stat", sb.toString());
                 gridState.incrementCurrCol();
@@ -289,80 +350,126 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
 
     private final Stack<GridState> gridStates = new Stack<GridState>();
 
-    private static class GridState {
-        int noCols = 1;
-        int currCol = 1;
+    
+    private interface GridState {
+    	void incrementCurrCol();
+    	
+    	void numCols(int val);
+
+		void currCol(int v);
+
+		int numCols();
+
+    	int currCol();
+
+	    String newRow();
+
+	    String newCell();
+	    
+    }
+    
+    private class DefaultGridState implements GridState {
+        private int noCols = 1;
+        private int currCol = 1;
         List<String> colSizes = new ArrayList<String>();
 
-        void incrementCurrCol() {
+        public void incrementCurrCol() {
             currCol = currCol != noCols ?
                 currCol + 1 :
                 1;
         }
 
-        GridState() {
+        DefaultGridState() {
             super();
             colSizes.add("12");
         }
 
+		@Override
+		public int currCol() {
+			return currCol;
+		}
+
+		@Override
+		public void currCol(int v) {
+			currCol = v;
+		}
+
+		@Override
+		public int numCols() {
+			return noCols;
+		}
+
+		@Override
+		public void numCols(int val) {
+			noCols = val;
+		}
+
+		@Override
+		public String newRow() {
+	        return group.getInstanceOf("row").render();
+	    }
+
+		@Override
+		public String newCell() {
+	    	DefaultGridState dgs = (DefaultGridState) gridState;
+	        final String colSize = dgs.colSizes.get(dgs.currCol() - 1);
+	        final ST st = group.getInstanceOf("cell");
+	        st.add("size", colSize);
+	        return st.render();
+
+	    }
+		
+    }
+
+    private class TableGridState implements GridState {
+        private int noCols = 1;
+        private int currCol = 1;
+
+        public void incrementCurrCol() {
+            currCol = currCol != noCols ?
+                currCol + 1 :
+                1;
+        }
+
+        TableGridState() {
+            super();            
+        }
+
+		@Override
+		public int currCol() {
+			return currCol;
+		}
+
+		@Override
+		public void currCol(int v) {
+			currCol = v;
+		}
+
+		@Override
+		public int numCols() {
+			return noCols;
+		}
+
+		@Override
+		public void numCols(int val) {
+			noCols = val;
+		}
+
+		@Override
+		public String newRow() {
+	        return group.getInstanceOf("tableRow").render();
+	    }
+
+		@Override
+		public String newCell() {
+	        final ST st = group.getInstanceOf("tableCell");
+	        return st.render();
+
+	    }
+
     }
 
     private GridState gridState;
-
-    @Override
-    public String visitGridStat(final GridStatContext ctx) {
-        gridState.colSizes.clear();
-        gridState.noCols = ctx.INT().size();
-        gridState.currCol = 1;
-        for (int i = 0; i < ctx.INT().size(); i++) {
-            gridState.colSizes.add(ctx.INT(i).getText());
-        }
-        return null;
-    }
-
-    @Override
-    public String visitSkipStat(final SkipStatContext ctx) {
-        final ST st = group.getInstanceOf("skip");
-        return st.render();
-    }
-
-    @Override
-    public String visitNewRowStat(final NewRowStatContext ctx) {
-        gridState.currCol = 1;
-        return null;
-    }
-
-    private String newRow() {
-        return group.getInstanceOf("row").render();
-    }
-
-    private String newCell() {
-        final String colSize = gridState.colSizes.get(gridState.currCol - 1);
-        final ST st = group.getInstanceOf("cell");
-        st.add("size", colSize);
-        return st.render();
-
-    }
-
-    @Override
-    public String visitHeaderStat(final HeaderStatContext ctx) {
-        final ST st = group.getInstanceOf("header");
-        st.add("level", ctx.INT().getText());
-        st.add("text", sanitiseString(ctx.STRING().getText()));
-        return st.render();
-    }
-
-    @Override
-    public String visitInfoStat(final InfoStatContext ctx) {
-        final ST st = group.getInstanceOf("info");
-        st.add("text", sanitiseString(ctx.STRING().getText()));
-        return st.render();
-    }
-
-    @Override
-    public String visitRenderStat(final RenderStatContext ctx) {
-        return "this." + visit(ctx.idRef()) + ".render(els.pop());";
-    }
 
     @Override
     public String visitFieldsSection(final FieldsSectionContext ctx) {
