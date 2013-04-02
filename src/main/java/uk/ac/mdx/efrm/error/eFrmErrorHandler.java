@@ -7,6 +7,10 @@ import org.antlr.v4.runtime.Token;
 
 public class eFrmErrorHandler {
 
+	public void clear() {
+		errors.clear();
+	}
+	
     List<eFrmError> errors = new ArrayList<eFrmError>();
 
     public void addError(final Token t, final String msg) {

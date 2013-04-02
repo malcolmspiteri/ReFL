@@ -26,6 +26,8 @@ public class eFrmGenerator {
 
     public String generate(final Reader r) throws IOException, eFrmErrorException {
 
+    	errorHandler.clear();
+    	
         final ParseTree tree = buildParseTree(r);
         
         if (errorHandler.hasErrors()) {

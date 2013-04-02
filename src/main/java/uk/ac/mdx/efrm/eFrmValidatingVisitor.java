@@ -13,6 +13,8 @@ import main.antlr.eFrmParser.BracketedExprContext;
 import main.antlr.eFrmParser.ElseBlockContext;
 import main.antlr.eFrmParser.EqualityExprContext;
 import main.antlr.eFrmParser.FormContext;
+import main.antlr.eFrmParser.GreaterThanExprContext;
+import main.antlr.eFrmParser.GreaterThanOrEqualExprContext;
 import main.antlr.eFrmParser.GridStatContext;
 import main.antlr.eFrmParser.GroupDeclContext;
 import main.antlr.eFrmParser.GroupTypeContext;
@@ -20,8 +22,12 @@ import main.antlr.eFrmParser.HeaderStatContext;
 import main.antlr.eFrmParser.IDExprContext;
 import main.antlr.eFrmParser.IdRefContext;
 import main.antlr.eFrmParser.IfContStatContext;
+import main.antlr.eFrmParser.InequalityExprContext;
 import main.antlr.eFrmParser.IntegerLiteralExprContext;
+import main.antlr.eFrmParser.IsEmptyExprContext;
 import main.antlr.eFrmParser.LessThanExprContext;
+import main.antlr.eFrmParser.LessThanOrEqualExprContext;
+import main.antlr.eFrmParser.NotExprContext;
 import main.antlr.eFrmParser.OptionExprContext;
 import main.antlr.eFrmParser.RenderStatContext;
 import main.antlr.eFrmParser.StatContext;
@@ -207,7 +213,28 @@ public class eFrmValidatingVisitor extends eFrmBaseVisitor<Symbol.Type> {
         }
     }
 
+    
+    
     @Override
+	public Type visitIsEmptyExpr(IsEmptyExprContext ctx) {
+    	if (!(ctx.expr() instanceof IDExprContext)) {
+    		errorHandler.addError(ctx.expr().getStart(), ctx.expr().getText() + " is not a field or variable");
+    	}		
+    	return Type.tBOOLEAN;
+	}
+
+    
+    
+    @Override
+	public Type visitNotExpr(NotExprContext ctx) {
+        final Type et = visit(ctx.expr());
+        if (et != Type.tBOOLEAN) {
+            errorHandler.addError(ctx.expr().getStart(), "Invalid expression");
+        }
+        return Type.tBOOLEAN;
+	}
+
+	@Override
     public Symbol.Type visitEqualityExpr(final EqualityExprContext ctx) {
         final Symbol.Type e1Type = visit(ctx.expr(0));
         final Symbol.Type e2Type = visit(ctx.expr(1));
@@ -217,7 +244,17 @@ public class eFrmValidatingVisitor extends eFrmBaseVisitor<Symbol.Type> {
         return Type.tBOOLEAN;
     }
 
-    @Override
+	@Override
+    public Symbol.Type visitInequalityExpr(final InequalityExprContext ctx) {
+        final Symbol.Type e1Type = visit(ctx.expr(0));
+        final Symbol.Type e2Type = visit(ctx.expr(1));
+        if (e1Type != e2Type) {
+            errorHandler.addError(ctx.expr(1).getStart(), "Incompatible comparison");
+        }
+        return Type.tBOOLEAN;
+    }
+
+	@Override
     public Symbol.Type visitLessThanExpr(final LessThanExprContext ctx) {
         final Symbol.Type e1Type = visit(ctx.expr(0));
         final Symbol.Type e2Type = visit(ctx.expr(1));
@@ -228,7 +265,40 @@ public class eFrmValidatingVisitor extends eFrmBaseVisitor<Symbol.Type> {
         return Type.tBOOLEAN;
     }
 
-    @Override
+	@Override
+    public Symbol.Type visitLessThanOrEqualExpr(final LessThanOrEqualExprContext ctx) {
+        final Symbol.Type e1Type = visit(ctx.expr(0));
+        final Symbol.Type e2Type = visit(ctx.expr(1));
+        if (!(e1Type == Type.tNUMBER && e2Type == Type.tNUMBER) &&
+        	!(e1Type == Type.tSTRING && e2Type == Type.tSTRING)) {
+            errorHandler.addError(ctx.expr(1).getStart(), "Incompatible comparison");
+        }
+        return Type.tBOOLEAN;
+    }
+
+	@Override
+    public Symbol.Type visitGreaterThanExpr(final GreaterThanExprContext ctx) {
+        final Symbol.Type e1Type = visit(ctx.expr(0));
+        final Symbol.Type e2Type = visit(ctx.expr(1));
+        if (!(e1Type == Type.tNUMBER && e2Type == Type.tNUMBER) &&
+        	!(e1Type == Type.tSTRING && e2Type == Type.tSTRING)) {
+            errorHandler.addError(ctx.expr(1).getStart(), "Incompatible comparison");
+        }
+        return Type.tBOOLEAN;
+    }
+
+	@Override
+    public Symbol.Type visitGreaterThanOrEqualExpr(final GreaterThanOrEqualExprContext ctx) {
+        final Symbol.Type e1Type = visit(ctx.expr(0));
+        final Symbol.Type e2Type = visit(ctx.expr(1));
+        if (!(e1Type == Type.tNUMBER && e2Type == Type.tNUMBER) &&
+        	!(e1Type == Type.tSTRING && e2Type == Type.tSTRING)) {
+            errorHandler.addError(ctx.expr(1).getStart(), "Incompatible comparison");
+        }
+        return Type.tBOOLEAN;
+    }
+
+	@Override
     public Type visitBracketedExpr(final BracketedExprContext ctx) {
         return visit(ctx.expr());
     }

@@ -9,7 +9,7 @@ var $id$ = Group.extend({
 	},
 	render: function(el) {	
 		if (el) {
-			this.el = el;
+			this.el = jQuery("<div class='container-fluid' style='padding: 0 0 0 0'></div>").appendTo(el);
 		}
 		var els = [];
 		$if(layout)$

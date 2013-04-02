@@ -1,7 +1,5 @@
 form(id, label, fields, layout, groups, setter, getter, rules) ::= <<
-<div class="container-fluid">
-	<form id="$id$-form"/>
-</div>
+<form id="$id$-form"/>
 <script type="text/javascript">
 	//<![CDATA[
 
@@ -15,7 +13,7 @@ var $id$ = Class.extend({
 	},
 	render: function(el) {	
 		if (el) {
-			this.el = el;
+			this.el = jQuery("<div class='container-fluid' style='padding: 0 0 0 0'></div>").appendTo(el);
 		}
 		var els = [];
 		$if(layout)$

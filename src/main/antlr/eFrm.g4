@@ -53,7 +53,13 @@ expr			: idRef ('.' idRef)* #IDExpr
 				| '[' ID (',' ID)* ']' #OptionExpr
 				| '(' expr ')' #BracketedExpr
 				| expr '==' expr #EqualityExpr				
+				| expr '<>' expr #InequalityExpr				
 				| expr '<' expr #LessThanExpr
+				| expr '>' expr #GreaterThanExpr
+				| expr '<=' expr #LessThanOrEqualExpr
+				| expr '>=' expr #GreaterThanOrEqualExpr
+				| expr 'IS' 'EMPTY' #IsEmptyExpr
+				| 'NOT' expr #NotExpr
 				| expr op=('+'|'-'|'*'|'/') expr #ArithmeticExpr
 				| INT #IntegerLiteralExpr
 				| STRING #StringLiteralExpr

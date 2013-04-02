@@ -16,6 +16,8 @@ import main.antlr.eFrmParser.EqualityExprContext;
 import main.antlr.eFrmParser.FieldDeclContext;
 import main.antlr.eFrmParser.FieldsSectionContext;
 import main.antlr.eFrmParser.FormContext;
+import main.antlr.eFrmParser.GreaterThanExprContext;
+import main.antlr.eFrmParser.GreaterThanOrEqualExprContext;
 import main.antlr.eFrmParser.GridStatContext;
 import main.antlr.eFrmParser.GroupDeclContext;
 import main.antlr.eFrmParser.GroupTypeContext;
@@ -23,13 +25,17 @@ import main.antlr.eFrmParser.HeaderStatContext;
 import main.antlr.eFrmParser.IDExprContext;
 import main.antlr.eFrmParser.IdRefContext;
 import main.antlr.eFrmParser.IfContStatContext;
+import main.antlr.eFrmParser.InequalityExprContext;
 import main.antlr.eFrmParser.InfoStatContext;
 import main.antlr.eFrmParser.IntegerLiteralExprContext;
+import main.antlr.eFrmParser.IsEmptyExprContext;
 import main.antlr.eFrmParser.LabeledIdContext;
 import main.antlr.eFrmParser.LayoutSectionContext;
 import main.antlr.eFrmParser.LessThanExprContext;
+import main.antlr.eFrmParser.LessThanOrEqualExprContext;
 import main.antlr.eFrmParser.NewRowStatContext;
 import main.antlr.eFrmParser.NoAskStatContext;
+import main.antlr.eFrmParser.NotExprContext;
 import main.antlr.eFrmParser.NumberRangeTypeContext;
 import main.antlr.eFrmParser.OptionDeclContext;
 import main.antlr.eFrmParser.OptionExprContext;
@@ -55,6 +61,7 @@ import uk.ac.mdx.efrm.scope.GroupSymbol;
 import uk.ac.mdx.efrm.scope.Scope;
 import uk.ac.mdx.efrm.scope.Symbol;
 import uk.ac.mdx.efrm.scope.VariableSymbol;
+import uk.ac.mdx.efrm.scope.Symbol.Type;
 
 class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
 
@@ -734,18 +741,56 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
     }
 
     @Override
+	public String visitNotExpr(NotExprContext ctx) {
+        return "!(" + visit(ctx.expr()) + ")";
+	}
+    
+    @Override
+	public String visitIsEmptyExpr(IsEmptyExprContext ctx) {
+		return visit(ctx.expr()) + ".isEmpty()";
+	}
+
+	@Override
     public String visitEqualityExpr(final EqualityExprContext ctx) {
         return String.format("areEqual(%s,%s)", addValIfNecessary(visit(ctx.expr(0))),
             addValIfNecessary(visit(ctx.expr(1))));
     }
 
-    @Override
+	@Override
+    public String visitInequalityExpr(final InequalityExprContext ctx) {
+        return String.format("!(areEqual(%s,%s))", addValIfNecessary(visit(ctx.expr(0))),
+            addValIfNecessary(visit(ctx.expr(1))));
+    }
+
+	@Override
     public String visitLessThanExpr(final LessThanExprContext ctx) {
         return String.format("lessThan(%s,%s)", addValIfNecessary(visit(ctx.expr(0))),
             addValIfNecessary(visit(ctx.expr(1))));
     }
 
-    @Override
+	@Override
+    public String visitLessThanOrEqualExpr(final LessThanOrEqualExprContext ctx) {
+        return "(" + String.format("lessThan(%s,%s)", addValIfNecessary(visit(ctx.expr(0))),
+            addValIfNecessary(visit(ctx.expr(1)))) + " || " +
+            String.format("areEqual(%s,%s)", addValIfNecessary(visit(ctx.expr(0))),
+                    addValIfNecessary(visit(ctx.expr(1)))) + ")";
+    }
+
+	@Override
+    public String visitGreaterThanExpr(final GreaterThanExprContext ctx) {
+        return String.format("greaterThan(%s,%s)", addValIfNecessary(visit(ctx.expr(0))),
+            addValIfNecessary(visit(ctx.expr(1))));
+    }
+
+	@Override
+    public String visitGreaterThanOrEqualExpr(final GreaterThanOrEqualExprContext ctx) {
+        return "(" + String.format("greaterThan(%s,%s)", addValIfNecessary(visit(ctx.expr(0))),
+                addValIfNecessary(visit(ctx.expr(1)))) + " || " +
+                String.format("areEqual(%s,%s)", addValIfNecessary(visit(ctx.expr(0))),
+                        addValIfNecessary(visit(ctx.expr(1)))) + ")";
+    }
+
+	@Override
     public String visitIfContStat(final IfContStatContext ctx) {
         final ST stf = group.getInstanceOf("ifStmt");
         stf.add("expr", visit(ctx.expr()));
