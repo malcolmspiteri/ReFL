@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Stack;
 
 import main.antlr.eFrmBaseVisitor;
 import main.antlr.eFrmParser.ArithmeticExprContext;
@@ -85,7 +84,7 @@ public class eFrmValidatingVisitor extends eFrmBaseVisitor<Symbol.Type> {
 
     /****************** RULES ******************/
 
-    private List<String> ancestors = new ArrayList<String>();
+    private final List<String> ancestors = new ArrayList<String>();
 
     private String ancestors() {
         final Iterator<String> iter = ancestors.iterator();
@@ -120,23 +119,23 @@ public class eFrmValidatingVisitor extends eFrmBaseVisitor<Symbol.Type> {
                 errorHandler.addError(ctx.ID().getSymbol(), name + " is not a variable or field");
             }
             if (ctx.expr() != null) {
-            	// Temporary stash ancestors
-            	String[] tmp = ancestors.toArray(new String[] {});
-            	ancestors.clear();
+                // Temporary stash ancestors
+                final String[] tmp = ancestors.toArray(new String[] {});
+                ancestors.clear();
                 final Symbol.Type e = visit(ctx.expr());
                 ancestors.addAll(Arrays.asList(tmp));
                 if (e != Type.tNUMBER) {
-                	errorHandler.addError(ctx.expr().getStart(), "dimension is not a number");
+                    errorHandler.addError(ctx.expr().getStart(), "dimension is not a number");
                 }
 
             }
             if ((ctx.expr() != null) && !(var instanceof ArrayFieldSymbol)) {
                 errorHandler.addError(ctx.ID().getSymbol(), name + " is not an array");
             }
-            if ((ctx.expr() == null) && var instanceof ArrayFieldSymbol) {
-                //errorHandler.addError(ctx.ID().getSymbol(), name + " is an array");
+            if ((ctx.expr() == null) && (var instanceof ArrayFieldSymbol)) {
+                // errorHandler.addError(ctx.ID().getSymbol(), name + " is an array");
             }
-            if (var instanceof ArrayFieldSymbol && (ctx.expr() != null)) {
+            if ((var instanceof ArrayFieldSymbol) && (ctx.expr() != null)) {
                 return toNonArrayType(var.getType());
             } else {
                 return var.getType();
@@ -213,28 +212,24 @@ public class eFrmValidatingVisitor extends eFrmBaseVisitor<Symbol.Type> {
         }
     }
 
-    
-    
     @Override
-	public Type visitIsEmptyExpr(IsEmptyExprContext ctx) {
-    	if (!(ctx.expr() instanceof IDExprContext)) {
-    		errorHandler.addError(ctx.expr().getStart(), ctx.expr().getText() + " is not a field or variable");
-    	}		
-    	return Type.tBOOLEAN;
-	}
+    public Type visitIsEmptyExpr(final IsEmptyExprContext ctx) {
+        if (!(ctx.expr() instanceof IDExprContext)) {
+            errorHandler.addError(ctx.expr().getStart(), ctx.expr().getText() + " is not a field or variable");
+        }
+        return Type.tBOOLEAN;
+    }
 
-    
-    
     @Override
-	public Type visitNotExpr(NotExprContext ctx) {
+    public Type visitNotExpr(final NotExprContext ctx) {
         final Type et = visit(ctx.expr());
         if (et != Type.tBOOLEAN) {
             errorHandler.addError(ctx.expr().getStart(), "Invalid expression");
         }
         return Type.tBOOLEAN;
-	}
+    }
 
-	@Override
+    @Override
     public Symbol.Type visitEqualityExpr(final EqualityExprContext ctx) {
         final Symbol.Type e1Type = visit(ctx.expr(0));
         final Symbol.Type e2Type = visit(ctx.expr(1));
@@ -244,7 +239,7 @@ public class eFrmValidatingVisitor extends eFrmBaseVisitor<Symbol.Type> {
         return Type.tBOOLEAN;
     }
 
-	@Override
+    @Override
     public Symbol.Type visitInequalityExpr(final InequalityExprContext ctx) {
         final Symbol.Type e1Type = visit(ctx.expr(0));
         final Symbol.Type e2Type = visit(ctx.expr(1));
@@ -254,51 +249,51 @@ public class eFrmValidatingVisitor extends eFrmBaseVisitor<Symbol.Type> {
         return Type.tBOOLEAN;
     }
 
-	@Override
+    @Override
     public Symbol.Type visitLessThanExpr(final LessThanExprContext ctx) {
         final Symbol.Type e1Type = visit(ctx.expr(0));
         final Symbol.Type e2Type = visit(ctx.expr(1));
-        if (!(e1Type == Type.tNUMBER && e2Type == Type.tNUMBER) &&
-        	!(e1Type == Type.tSTRING && e2Type == Type.tSTRING)) {
+        if (!((e1Type == Type.tNUMBER) && (e2Type == Type.tNUMBER)) &&
+            !((e1Type == Type.tSTRING) && (e2Type == Type.tSTRING))) {
             errorHandler.addError(ctx.expr(1).getStart(), "Incompatible comparison");
         }
         return Type.tBOOLEAN;
     }
 
-	@Override
+    @Override
     public Symbol.Type visitLessThanOrEqualExpr(final LessThanOrEqualExprContext ctx) {
         final Symbol.Type e1Type = visit(ctx.expr(0));
         final Symbol.Type e2Type = visit(ctx.expr(1));
-        if (!(e1Type == Type.tNUMBER && e2Type == Type.tNUMBER) &&
-        	!(e1Type == Type.tSTRING && e2Type == Type.tSTRING)) {
+        if (!((e1Type == Type.tNUMBER) && (e2Type == Type.tNUMBER)) &&
+            !((e1Type == Type.tSTRING) && (e2Type == Type.tSTRING))) {
             errorHandler.addError(ctx.expr(1).getStart(), "Incompatible comparison");
         }
         return Type.tBOOLEAN;
     }
 
-	@Override
+    @Override
     public Symbol.Type visitGreaterThanExpr(final GreaterThanExprContext ctx) {
         final Symbol.Type e1Type = visit(ctx.expr(0));
         final Symbol.Type e2Type = visit(ctx.expr(1));
-        if (!(e1Type == Type.tNUMBER && e2Type == Type.tNUMBER) &&
-        	!(e1Type == Type.tSTRING && e2Type == Type.tSTRING)) {
+        if (!((e1Type == Type.tNUMBER) && (e2Type == Type.tNUMBER)) &&
+            !((e1Type == Type.tSTRING) && (e2Type == Type.tSTRING))) {
             errorHandler.addError(ctx.expr(1).getStart(), "Incompatible comparison");
         }
         return Type.tBOOLEAN;
     }
 
-	@Override
+    @Override
     public Symbol.Type visitGreaterThanOrEqualExpr(final GreaterThanOrEqualExprContext ctx) {
         final Symbol.Type e1Type = visit(ctx.expr(0));
         final Symbol.Type e2Type = visit(ctx.expr(1));
-        if (!(e1Type == Type.tNUMBER && e2Type == Type.tNUMBER) &&
-        	!(e1Type == Type.tSTRING && e2Type == Type.tSTRING)) {
+        if (!((e1Type == Type.tNUMBER) && (e2Type == Type.tNUMBER)) &&
+            !((e1Type == Type.tSTRING) && (e2Type == Type.tSTRING))) {
             errorHandler.addError(ctx.expr(1).getStart(), "Incompatible comparison");
         }
         return Type.tBOOLEAN;
     }
 
-	@Override
+    @Override
     public Type visitBracketedExpr(final BracketedExprContext ctx) {
         return visit(ctx.expr());
     }

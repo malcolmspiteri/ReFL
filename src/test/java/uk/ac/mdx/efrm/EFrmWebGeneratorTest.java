@@ -17,7 +17,7 @@ public class EFrmWebGeneratorTest {
             final InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream("testForm6.txt");
 
             final eFrmGenerator generator = new eFrmGenerator();
-            final String out = generator.generate(new InputStreamReader(is));
+            final String out = generator.generate(new InputStreamReader(is)).getGeneratedCode();
             System.out.println(out);
         } catch (final eFrmErrorException e) {
             System.out.println(e.getErrorMsgHtml());

@@ -83,9 +83,6 @@ public class eFrmErrorHandler {
 
     public String generateErrorReport() {
         final StringBuilder sb = new StringBuilder();
-        sb.append("<div class='page-header'>");
-        sb.append("<h4>Errors detected during compilation</h4>");
-        sb.append("</div>");
         for (final eFrmError err : errors) {
             sb.append(reportError(err));
         }

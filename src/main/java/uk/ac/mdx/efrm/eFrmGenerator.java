@@ -24,17 +24,16 @@ public class eFrmGenerator {
 
     private final eFrmErrorHandler errorHandler = new eFrmErrorHandler();
 
-    public String generate(final Reader r) throws IOException, eFrmErrorException {
+    public eFrmGenerationResult generate(final Reader r) throws IOException, eFrmErrorException {
 
-    	errorHandler.clear();
-    	
+        errorHandler.clear();
+
         final ParseTree tree = buildParseTree(r);
-        
+
         if (errorHandler.hasErrors()) {
             throw new eFrmErrorException(errorHandler.generateErrorReport());
         }
 
-        
         final ParseTreeProperty<Scope> scopes = buildSymbolTable(tree);
 
         final eFrmVisitor<Symbol.Type> validator = new eFrmValidatingVisitor(errorHandler, scopes);
@@ -44,12 +43,13 @@ public class eFrmGenerator {
             throw new eFrmErrorException(errorHandler.generateErrorReport());
         }
 
-        final eFrmVisitor<String> renderer = new eFormGeneratingVisitor(
+        final eFrmVisitor<String> renderer = new eFrmGeneratingVisitor(
             scopes);
 
         final String output = renderer.visit(tree);
 
-        return output;
+        return new eFrmGenerationResult(((eFrmGeneratingVisitor) renderer).getName(),
+            ((eFrmGeneratingVisitor) renderer).getLabel(), output);
     }
 
     private ParseTreeProperty<Scope> buildSymbolTable(final ParseTree tree) {

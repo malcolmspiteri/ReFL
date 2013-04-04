@@ -57,18 +57,16 @@ import org.stringtemplate.v4.STGroup;
 import org.stringtemplate.v4.STGroupDir;
 
 import uk.ac.mdx.efrm.scope.ArrayFieldSymbol;
-import uk.ac.mdx.efrm.scope.GroupSymbol;
 import uk.ac.mdx.efrm.scope.Scope;
 import uk.ac.mdx.efrm.scope.Symbol;
 import uk.ac.mdx.efrm.scope.VariableSymbol;
-import uk.ac.mdx.efrm.scope.Symbol.Type;
 
-class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
+class eFrmGeneratingVisitor extends eFrmBaseVisitor<String> {
 
     private final ParseTreeProperty<Scope> scopes;
     private Scope currentScope;
 
-    public eFormGeneratingVisitor(final ParseTreeProperty<Scope> scopes) {
+    public eFrmGeneratingVisitor(final ParseTreeProperty<Scope> scopes) {
         super();
         this.scopes = scopes;
     }
@@ -94,6 +92,7 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
             return id;
         }
 
+        @SuppressWarnings("unused")
         public Symbol getSymbol() {
             return symbol;
         }
@@ -154,12 +153,26 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
         return st.render();
     }
 
+    private String name;
+    private String label;
+
+    public String getName() {
+        return name;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
     @Override
     public String visitForm(final FormContext ctx) {
         // Get the scope
         currentScope = scopes.get(ctx);
 
         final FieldDef fd = getFieldDef(ctx.formDecl().labeledId());
+
+        name = fd.getId();
+        label = fd.getLabel();
 
         final ST st = group.getInstanceOf("form");
         st.add("id", fd.getId());
@@ -187,7 +200,7 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
         return st.render();
     }
 
-    private String renderFormElement(String element) {
+    private String renderFormElement(final String element) {
         final StringBuilder sb = new StringBuilder();
         if (gridState.currCol() == 1) {
             sb.append(gridState.newRow());
@@ -195,116 +208,116 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
         sb.append(gridState.newCell());
         sb.append(element);
         gridState.incrementCurrCol();
-        return sb.toString();    	
-    }
-    
-    private String renderField(String parent, FieldDeclContext fdc) {
-    	StringBuilder sb = new StringBuilder();
-    	String fullName = parent + "." + fdc.labeledId().ID().getText();
-    	Symbol s = currentScope.resolve(fdc.labeledId().ID().getText());    	
-		if (s instanceof ArrayFieldSymbol) {    	
-    		// We have to render the whole damn array
-    		// Let's get the size first
-    		int size = ((ArrayFieldSymbol) s).getSize();
-    		for (int i = 0; i < size; i++) {
-    	    	if (s.getCustomTypeName() != null) {
-    	    		// Inline rendering of group
-    	    		GroupDeclContext gdc = groups.get(s.getCustomTypeName());
-    	    		Scope tmpScope = currentScope;
-    	    		currentScope = scopes.get(gdc);
-    	            for (final eFrmParser.FieldDeclContext lc : gdc.fieldsSection().fieldDecl()) {
-    	                sb.append(renderField(fullName + "[" + i + "]", lc));
-    	            }
-    	            currentScope = tmpScope;
-    	    	} else {
-    	    		sb.append(renderFormElement("this." + fullName + "[" + i + "].render(els.pop());") + "\n");
-    	    	}
-    		}
-    	} else {
-	    	if (s.getCustomTypeName() != null) {
-	    		// Inline rendering of group
-	    		GroupDeclContext gdc = groups.get(s.getCustomTypeName());
-	    		Scope tmpScope = currentScope;
-	    		currentScope = scopes.get(gdc);
-	            for (final eFrmParser.FieldDeclContext lc : gdc.fieldsSection().fieldDecl()) {
-	                sb.append(renderField(fullName, lc));
-	            }
-	            currentScope = tmpScope;
-	    	} else {
-	    		sb.append(renderFormElement("this." + fullName + ".render(els.pop());"));
-	    	}
-    	}
-    	return sb.toString();
-    }
-    
-    @Override
-    public String visitRenderStat(final RenderStatContext ctx) {    	
-    	StringBuilder sb = new StringBuilder();
-    	Symbol s = currentScope.resolve(ctx.idRef().ID().getText());
-        if (gridState.mode() == GridMode.INLINE) {		                	
-    	
-			if (s instanceof ArrayFieldSymbol && ctx.idRef().expr() == null) {    	
-		    	if (s.getCustomTypeName() != null) {
-		    		// Inline rendering of group
-		    		GroupDeclContext gdc = groups.get(s.getCustomTypeName());
-		    		Scope tmpScope = currentScope;
-		    		currentScope = scopes.get(gdc);
-		    		int size = ((ArrayFieldSymbol) s).getSize();
-		    		for (int i = 0; i < size; i++) {
-			            for (final eFrmParser.FieldDeclContext lc : gdc.fieldsSection().fieldDecl()) {
-			                sb.append(renderField(ctx.idRef().getText() + "[" + i + "]", lc));		                	
-			            }
-		    		}
-		            currentScope = tmpScope;
-		    	} else {
-		    		// We have to render the whole damn array
-		    		// Let's get the size first
-		    		int size = ((ArrayFieldSymbol) s).getSize();
-		    		for (int i = 0; i < size; i++) {
-		    			sb.append(renderFormElement("this." + visit(ctx.idRef()) + "[" + i + "].render(els.pop());") + "\n");
-		    		}
-		    	}
-	    	} else {
-		    	if (s.getCustomTypeName() != null) {
-		    		// Inline rendering of group
-		    		GroupDeclContext gdc = groups.get(s.getCustomTypeName());
-		    		Scope tmpScope = currentScope;
-		    		currentScope = scopes.get(gdc);
-		            for (final eFrmParser.FieldDeclContext lc : gdc.fieldsSection().fieldDecl()) {
-		                sb.append(renderField(ctx.idRef().getText(), lc));
-		            }
-		            currentScope = tmpScope;
-		    	} else {
-		    		sb.append(renderFormElement("this." + visit(ctx.idRef()) + ".render(els.pop());"));
-		    	}
-	    	}
-        } else {
-			if (s instanceof ArrayFieldSymbol && ctx.idRef().expr() == null) {
-	    		int size = ((ArrayFieldSymbol) s).getSize();
-	    		for (int i = 0; i < size; i++) {
-	            	sb.append(renderFormElement("this." + visit(ctx.idRef()) + "[" + i + "].render(els.pop());"));
-	    		}				
-			} else {
-	    		sb.append(renderFormElement("this." + visit(ctx.idRef()) + ".render(els.pop());"));				
-			}        	
-        }
-    	return sb.toString();
+        return sb.toString();
     }
 
-    
+    private String renderField(final String parent, final FieldDeclContext fdc) {
+        final StringBuilder sb = new StringBuilder();
+        final String fullName = parent + "." + fdc.labeledId().ID().getText();
+        final Symbol s = currentScope.resolve(fdc.labeledId().ID().getText());
+        if (s instanceof ArrayFieldSymbol) {
+            // We have to render the whole damn array
+            // Let's get the size first
+            final int size = ((ArrayFieldSymbol) s).getSize();
+            for (int i = 0; i < size; i++) {
+                if (s.getCustomTypeName() != null) {
+                    // Inline rendering of group
+                    final GroupDeclContext gdc = groups.get(s.getCustomTypeName());
+                    final Scope tmpScope = currentScope;
+                    currentScope = scopes.get(gdc);
+                    for (final eFrmParser.FieldDeclContext lc : gdc.fieldsSection().fieldDecl()) {
+                        sb.append(renderField(fullName + "[" + i + "]", lc));
+                    }
+                    currentScope = tmpScope;
+                } else {
+                    sb.append(renderFormElement("this." + fullName + "[" + i + "].render(els.pop());") + "\n");
+                }
+            }
+        } else {
+            if (s.getCustomTypeName() != null) {
+                // Inline rendering of group
+                final GroupDeclContext gdc = groups.get(s.getCustomTypeName());
+                final Scope tmpScope = currentScope;
+                currentScope = scopes.get(gdc);
+                for (final eFrmParser.FieldDeclContext lc : gdc.fieldsSection().fieldDecl()) {
+                    sb.append(renderField(fullName, lc));
+                }
+                currentScope = tmpScope;
+            } else {
+                sb.append(renderFormElement("this." + fullName + ".render(els.pop());"));
+            }
+        }
+        return sb.toString();
+    }
+
+    @Override
+    public String visitRenderStat(final RenderStatContext ctx) {
+        final StringBuilder sb = new StringBuilder();
+        final Symbol s = currentScope.resolve(ctx.idRef().ID().getText());
+        if (gridState.mode() == GridMode.INLINE) {
+
+            if ((s instanceof ArrayFieldSymbol) && (ctx.idRef().expr() == null)) {
+                if (s.getCustomTypeName() != null) {
+                    // Inline rendering of group
+                    final GroupDeclContext gdc = groups.get(s.getCustomTypeName());
+                    final Scope tmpScope = currentScope;
+                    currentScope = scopes.get(gdc);
+                    final int size = ((ArrayFieldSymbol) s).getSize();
+                    for (int i = 0; i < size; i++) {
+                        for (final eFrmParser.FieldDeclContext lc : gdc.fieldsSection().fieldDecl()) {
+                            sb.append(renderField(ctx.idRef().getText() + "[" + i + "]", lc));
+                        }
+                    }
+                    currentScope = tmpScope;
+                } else {
+                    // We have to render the whole damn array
+                    // Let's get the size first
+                    final int size = ((ArrayFieldSymbol) s).getSize();
+                    for (int i = 0; i < size; i++) {
+                        sb.append(renderFormElement("this." + visit(ctx.idRef()) + "[" + i + "].render(els.pop());")
+                            + "\n");
+                    }
+                }
+            } else {
+                if (s.getCustomTypeName() != null) {
+                    // Inline rendering of group
+                    final GroupDeclContext gdc = groups.get(s.getCustomTypeName());
+                    final Scope tmpScope = currentScope;
+                    currentScope = scopes.get(gdc);
+                    for (final eFrmParser.FieldDeclContext lc : gdc.fieldsSection().fieldDecl()) {
+                        sb.append(renderField(ctx.idRef().getText(), lc));
+                    }
+                    currentScope = tmpScope;
+                } else {
+                    sb.append(renderFormElement("this." + visit(ctx.idRef()) + ".render(els.pop());"));
+                }
+            }
+        } else {
+            if ((s instanceof ArrayFieldSymbol) && (ctx.idRef().expr() == null)) {
+                final int size = ((ArrayFieldSymbol) s).getSize();
+                for (int i = 0; i < size; i++) {
+                    sb.append(renderFormElement("this." + visit(ctx.idRef()) + "[" + i + "].render(els.pop());"));
+                }
+            } else {
+                sb.append(renderFormElement("this." + visit(ctx.idRef()) + ".render(els.pop());"));
+            }
+        }
+        return sb.toString();
+    }
+
     @Override
     public String visitGridStat(final GridStatContext ctx) {
-    	DefaultGridState dgs = new DefaultGridState();
-    	dgs.colSizes.clear();
-    	dgs.numCols(ctx.INT().size());
-    	dgs.currCol(1);
+        final DefaultGridState dgs = new DefaultGridState();
+        dgs.colSizes.clear();
+        dgs.numCols(ctx.INT().size());
+        dgs.currCol(1);
         for (int i = 0; i < ctx.INT().size(); i++) {
-        	dgs.colSizes.add(ctx.INT(i).getText());
+            dgs.colSizes.add(ctx.INT(i).getText());
         }
         if (ctx.INLINE() != null) {
-        	dgs.mode(GridMode.INLINE);
+            dgs.mode(GridMode.INLINE);
         } else {
-        	dgs.mode(GridMode.BLOCK);        	
+            dgs.mode(GridMode.BLOCK);
         }
         gridState = dgs;
         return ""; // nothing to generate
@@ -338,27 +351,27 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
     }
 
     @Override
-	public String visitTableStat(TableStatContext ctx) {
-    	TableGridState tgs = new TableGridState();
-    	tgs.numCols(ctx.STRING().size());
+    public String visitTableStat(final TableStatContext ctx) {
+        final TableGridState tgs = new TableGridState();
+        tgs.numCols(ctx.STRING().size());
         final ST st = group.getInstanceOf("table");
-    	for (int i = 0; i < ctx.STRING().size(); i++) {    		
+        for (int i = 0; i < ctx.STRING().size(); i++) {
             st.add("header", "<td><strong>" + sanitiseString(ctx.STRING(i).getText()) + "</strong></td>");
-    	}
-    	tgs.currCol(1);
-        if (ctx.INLINE() != null) {
-        	tgs.mode(GridMode.INLINE);
-        } else {
-        	tgs.mode(GridMode.BLOCK);        	
         }
-    	gridState = tgs;
-		return st.render();
-	}
+        tgs.currCol(1);
+        if (ctx.INLINE() != null) {
+            tgs.mode(GridMode.INLINE);
+        } else {
+            tgs.mode(GridMode.BLOCK);
+        }
+        gridState = tgs;
+        return st.render();
+    }
 
-	@Override
+    @Override
     public String visitLayoutSection(final LayoutSectionContext ctx) {
         if (gridState != null) {
-            gridStates.push(gridState);    			
+            gridStates.push(gridState);
         }
         gridState = new DefaultGridState();
         try {
@@ -455,38 +468,38 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
 
     private final Stack<GridState> gridStates = new Stack<GridState>();
 
-    
     private enum GridMode {
-    	BLOCK, INLINE
+        BLOCK, INLINE
     }
-    
+
     private interface GridState {
-    	
-    	void incrementCurrCol();
-    	
-    	void numCols(int val);
 
-		void currCol(int v);
+        void incrementCurrCol();
 
-		int numCols();
+        void numCols(int val);
 
-    	int currCol();
+        void currCol(int v);
 
-	    String newRow();
+        int numCols();
 
-	    String newCell();
-	    
-	    GridMode mode();
-	    
-	    void mode(GridMode mode);
-	    
+        int currCol();
+
+        String newRow();
+
+        String newCell();
+
+        GridMode mode();
+
+        void mode(GridMode mode);
+
     }
-    
+
     private class DefaultGridState implements GridState {
         private int noCols = 1;
         private int currCol = 1;
         List<String> colSizes = new ArrayList<String>();
 
+        @Override
         public void incrementCurrCol() {
             currCol = currCol != noCols ?
                 currCol + 1 :
@@ -498,59 +511,60 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
             colSizes.add("12");
         }
 
-		@Override
-		public int currCol() {
-			return currCol;
-		}
+        @Override
+        public int currCol() {
+            return currCol;
+        }
 
-		@Override
-		public void currCol(int v) {
-			currCol = v;
-		}
+        @Override
+        public void currCol(final int v) {
+            currCol = v;
+        }
 
-		@Override
-		public int numCols() {
-			return noCols;
-		}
+        @Override
+        public int numCols() {
+            return noCols;
+        }
 
-		@Override
-		public void numCols(int val) {
-			noCols = val;
-		}
+        @Override
+        public void numCols(final int val) {
+            noCols = val;
+        }
 
-		@Override
-		public String newRow() {
-	        return group.getInstanceOf("row").render();
-	    }
+        @Override
+        public String newRow() {
+            return group.getInstanceOf("row").render();
+        }
 
-		@Override
-		public String newCell() {
-	    	DefaultGridState dgs = (DefaultGridState) gridState;
-	        final String colSize = dgs.colSizes.get(dgs.currCol() - 1);
-	        final ST st = group.getInstanceOf("cell");
-	        st.add("size", colSize);
-	        return st.render();
+        @Override
+        public String newCell() {
+            final DefaultGridState dgs = (DefaultGridState) gridState;
+            final String colSize = dgs.colSizes.get(dgs.currCol() - 1);
+            final ST st = group.getInstanceOf("cell");
+            st.add("size", colSize);
+            return st.render();
 
-	    }
+        }
 
         private GridMode mode;
 
         @Override
-		public GridMode mode() {
-			return mode;
-		}
+        public GridMode mode() {
+            return mode;
+        }
 
-		@Override
-		public void mode(GridMode mode) {
-			this.mode = mode;
-		}
-		
+        @Override
+        public void mode(final GridMode mode) {
+            this.mode = mode;
+        }
+
     }
 
     private class TableGridState implements GridState {
         private int noCols = 1;
         private int currCol = 1;
 
+        @Override
         public void incrementCurrCol() {
             currCol = currCol != noCols ?
                 currCol + 1 :
@@ -558,52 +572,52 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
         }
 
         TableGridState() {
-            super();            
+            super();
         }
 
-		@Override
-		public int currCol() {
-			return currCol;
-		}
+        @Override
+        public int currCol() {
+            return currCol;
+        }
 
-		@Override
-		public void currCol(int v) {
-			currCol = v;
-		}
+        @Override
+        public void currCol(final int v) {
+            currCol = v;
+        }
 
-		@Override
-		public int numCols() {
-			return noCols;
-		}
+        @Override
+        public int numCols() {
+            return noCols;
+        }
 
-		@Override
-		public void numCols(int val) {
-			noCols = val;
-		}
+        @Override
+        public void numCols(final int val) {
+            noCols = val;
+        }
 
-		@Override
-		public String newRow() {
-	        return group.getInstanceOf("tableRow").render();
-	    }
+        @Override
+        public String newRow() {
+            return group.getInstanceOf("tableRow").render();
+        }
 
-		@Override
-		public String newCell() {
-	        final ST st = group.getInstanceOf("tableCell");
-	        return st.render();
+        @Override
+        public String newCell() {
+            final ST st = group.getInstanceOf("tableCell");
+            return st.render();
 
-	    }
+        }
 
         private GridMode mode;
 
         @Override
-		public GridMode mode() {
-			return mode;
-		}
+        public GridMode mode() {
+            return mode;
+        }
 
-		@Override
-		public void mode(GridMode mode) {
-			this.mode = mode;
-		}
+        @Override
+        public void mode(final GridMode mode) {
+            this.mode = mode;
+        }
 
     }
 
@@ -619,7 +633,7 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
                 final int c = Integer.parseInt(fdc.INT().getText());
                 sb.append("[");
                 for (int i = 0; i < c; i++) {
-                	String fr = visit(fdc);
+                    final String fr = visit(fdc);
                     sb.append(fr + ',');
                 }
                 sb.deleteCharAt(sb.lastIndexOf(","));
@@ -741,56 +755,56 @@ class eFormGeneratingVisitor extends eFrmBaseVisitor<String> {
     }
 
     @Override
-	public String visitNotExpr(NotExprContext ctx) {
+    public String visitNotExpr(final NotExprContext ctx) {
         return "!(" + visit(ctx.expr()) + ")";
-	}
-    
-    @Override
-	public String visitIsEmptyExpr(IsEmptyExprContext ctx) {
-		return visit(ctx.expr()) + ".isEmpty()";
-	}
+    }
 
-	@Override
+    @Override
+    public String visitIsEmptyExpr(final IsEmptyExprContext ctx) {
+        return visit(ctx.expr()) + ".isEmpty()";
+    }
+
+    @Override
     public String visitEqualityExpr(final EqualityExprContext ctx) {
         return String.format("areEqual(%s,%s)", addValIfNecessary(visit(ctx.expr(0))),
             addValIfNecessary(visit(ctx.expr(1))));
     }
 
-	@Override
+    @Override
     public String visitInequalityExpr(final InequalityExprContext ctx) {
         return String.format("!(areEqual(%s,%s))", addValIfNecessary(visit(ctx.expr(0))),
             addValIfNecessary(visit(ctx.expr(1))));
     }
 
-	@Override
+    @Override
     public String visitLessThanExpr(final LessThanExprContext ctx) {
         return String.format("lessThan(%s,%s)", addValIfNecessary(visit(ctx.expr(0))),
             addValIfNecessary(visit(ctx.expr(1))));
     }
 
-	@Override
+    @Override
     public String visitLessThanOrEqualExpr(final LessThanOrEqualExprContext ctx) {
         return "(" + String.format("lessThan(%s,%s)", addValIfNecessary(visit(ctx.expr(0))),
             addValIfNecessary(visit(ctx.expr(1)))) + " || " +
             String.format("areEqual(%s,%s)", addValIfNecessary(visit(ctx.expr(0))),
-                    addValIfNecessary(visit(ctx.expr(1)))) + ")";
+                addValIfNecessary(visit(ctx.expr(1)))) + ")";
     }
 
-	@Override
+    @Override
     public String visitGreaterThanExpr(final GreaterThanExprContext ctx) {
         return String.format("greaterThan(%s,%s)", addValIfNecessary(visit(ctx.expr(0))),
             addValIfNecessary(visit(ctx.expr(1))));
     }
 
-	@Override
+    @Override
     public String visitGreaterThanOrEqualExpr(final GreaterThanOrEqualExprContext ctx) {
         return "(" + String.format("greaterThan(%s,%s)", addValIfNecessary(visit(ctx.expr(0))),
-                addValIfNecessary(visit(ctx.expr(1)))) + " || " +
-                String.format("areEqual(%s,%s)", addValIfNecessary(visit(ctx.expr(0))),
-                        addValIfNecessary(visit(ctx.expr(1)))) + ")";
+            addValIfNecessary(visit(ctx.expr(1)))) + " || " +
+            String.format("areEqual(%s,%s)", addValIfNecessary(visit(ctx.expr(0))),
+                addValIfNecessary(visit(ctx.expr(1)))) + ")";
     }
 
-	@Override
+    @Override
     public String visitIfContStat(final IfContStatContext ctx) {
         final ST stf = group.getInstanceOf("ifStmt");
         stf.add("expr", visit(ctx.expr()));
