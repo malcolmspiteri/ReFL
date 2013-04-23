@@ -1,0 +1,11 @@
+FORM MyForm "This is my form"
+FIELDS
+  f1 : OPTION { yes, no }
+  f2 : STRING[50]  
+RULES
+  IF (f1 == [yes]) THEN
+    NOASK f2
+  ELSE
+    ASK f1
+  END IF
+END FORM

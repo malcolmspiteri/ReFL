@@ -1,0 +1,4 @@
+FORM MyForm "This is my form"
+FIELDS
+  f1 : ARRAY[100] OF STRING[10]
+END FORM

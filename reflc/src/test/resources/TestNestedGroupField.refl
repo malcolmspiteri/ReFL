@@ -1,0 +1,14 @@
+FORM TestForm "Test Form"
+  FIELDS
+    f1 : STRING[10]
+    SUBFORM grp1
+      FIELDS
+        SUBFORM grp2
+          FIELDS
+            g2f1 : 1..2
+        END SUBFORM
+        g1f1 "Field number 1" : 1..2
+        g1f2 "Field number 2" : grp2
+    END SUBFORM
+    f2: grp1
+END FORM

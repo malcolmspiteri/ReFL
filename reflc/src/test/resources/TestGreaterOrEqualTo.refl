@@ -1,0 +1,8 @@
+FORM MyForm "This is my form"
+FIELDS
+  f1 : 1..10
+RULES
+  IF (f1 >= 10) THEN
+    ERROR INVOLVING (f1) "Test error"
+  END IF
+END FORM

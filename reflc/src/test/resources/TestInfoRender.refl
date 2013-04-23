@@ -1,0 +1,7 @@
+FORM TestHeaderRender
+FIELDS
+f1 : 1..2
+LAYOUT
+INFO "This is a test"
+f1
+END FORM

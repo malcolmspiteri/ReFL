@@ -1,0 +1,11 @@
+FORM MyForm "This is my form"
+FIELDS
+  f1 : 1..50    
+RULES
+  c : NUMBER
+  t : NUMBER = 0
+  WHILE (c < 50)
+   c = c + 1
+  END WHILE
+  t = c
+END FORM

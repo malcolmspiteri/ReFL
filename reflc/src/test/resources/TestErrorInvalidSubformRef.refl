@@ -1,0 +1,11 @@
+FORM MyForm "This is my form"
+FIELDS
+  f1 : STRING[10]
+  SUBFORM g1
+    FIELDS
+      g1f1 : 1..2
+  END SUBFORM
+  f2 : g1
+RULES
+  g1.g1f1 = 1
+END FORM

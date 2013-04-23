@@ -1,0 +1,5 @@
+FORM MyForm "This is my form"
+FIELDS
+  f1 : OPTION {one "one", two "two", tre, for}
+  f2 : OPTION [2] {one "one", two "two", tre, for}
+END FORM

@@ -9,8 +9,8 @@
 	</parent>
 	<artifactId>workshop</artifactId>
 	<name>ReFL Workshop</name>
-	<packaging>war</packaging>	
-	
+	<packaging>war</packaging>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.restlet.jee</groupId>
@@ -65,7 +65,7 @@
 		</dependency>
 		<dependency>
 			<groupId>uk.ac.mdx</groupId>
-			<artifactId>efrm</artifactId>
+			<artifactId>reflc</artifactId>
 			<version>1.0-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
@@ -77,7 +77,7 @@
 		</repository>
 	</repositories>
 	<build>
-		<finalName>efrm</finalName>
+		<finalName>refl</finalName>
 		<plugins>
 			<plugin>
 				<groupId>com.googlecode.flyway</groupId>
@@ -85,7 +85,7 @@
 				<version>2.0.3</version>
 				<configuration>
 					<driver>org.hsqldb.jdbcDriver</driver>
-					<url>jdbc:hsqldb:mem:efrmdb</url>
+					<url>jdbc:hsqldb:mem:refldb</url>
 					<user>sa</user>
 					<password></password>
 				</configuration>
@@ -105,6 +105,18 @@
 						</connector>
 					</connectors>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>net.sf.alchim</groupId>
+				<artifactId>winstone-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>embed</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>

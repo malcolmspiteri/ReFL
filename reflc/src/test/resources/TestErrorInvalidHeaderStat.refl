@@ -1,0 +1,7 @@
+FORM MyForm "This is my form"
+FIELDS
+  f1 : STRING[10]
+LAYOUT
+  HEADER 7 "TEST"
+  f1
+END FORM

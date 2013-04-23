@@ -24,8 +24,8 @@ $(document).ready(
 			});
 
 			function bindEditFormEvents() {
-				//$("a[data-form-id]").off("click", editForm);
-				//$("a[data-form-id]").on("click", editForm);
+				$("a[data-form-id]").off("click", editForm);
+				$("a[data-form-id]").on("click", editForm);
 				
 				$("#formsNavList a[data-form-id]").off("click", highlightForm);
 				$("#formsNavList a[data-form-id]").on("click", highlightForm);
@@ -40,7 +40,7 @@ $(document).ready(
 			function editForm(e) {
 				var id = $(this).attr("data-form-id");
 				console.log("Editing form:" + id);
-				$.getJSON('services/hello/' + id, function(data) {
+				$.getJSON('services/forms/' + id, function(data) {
 					$("#eform #formId").val(data.id);
 					$("#eform #formVersion").val(data.ver);
 					$("#eform #formDef").val(data.def);
@@ -70,7 +70,8 @@ $(document).ready(
 			function formToLi(frm) {
 				  return '<li>' + 
 				  '<a href="#" data-toggle="tooltip" title="Version ' + frm.ver + '. Last modified on ' + frm.created + '" ' +
-				  'data-form-id="' + frm.id + '">' + frm.label + '</a>' +				  
+				  'data-form-id="' + frm.id + '"><span class="icon-black icon-file"/>' + frm.label + '</a>' +
+				  '</div>' + 
 				  '</li>';
 			}
 

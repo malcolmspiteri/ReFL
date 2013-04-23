@@ -1,0 +1,7 @@
+FORM MyForm "This is my form"
+FIELDS
+  f1 : STRING[10]
+LAYOUT
+  GRID 5 5 1 1 1   
+  f1
+END FORM

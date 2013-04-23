@@ -20,13 +20,13 @@ var $id$ = Class.extend({
 		$layout$
 		$else$
 		for ( var f in this ) {
-			if (this[f] instanceof Field || this[f] instanceof Group) {
+			if (this[f] instanceof Field || this[f] instanceof SubForm) {
 				els.push(this.el);
 				els.push(jQuery("<div class='row-fluid'></div>").appendTo(els.pop())); 
 				els.push(jQuery("<div class='span12'></div>").appendTo(els.pop()));
 				this[f].render(els.pop());
 			}
-			if (Object.prototype.toString.call(this[f]) === '[object Array]' && (this[f][0] instanceof Field || this[f][0] instanceof Group)) {
+			if (Object.prototype.toString.call(this[f]) === '[object Array]' && (this[f][0] instanceof Field || this[f][0] instanceof SubForm)) {
 				for (var i = 0; i < this[f].length; i++) {
 					els.push(this.el);
 					els.push(jQuery("<div class='row-fluid'></div>").appendTo(els.pop())); 
@@ -67,10 +67,10 @@ var $id$ = Class.extend({
 	    this.clearErrors();
 		$rules$
 		for ( var f in this ) {
-			if (this[f] instanceof Field || this[f] instanceof Group) {
+			if (this[f] instanceof Field || this[f] instanceof SubForm) {
 				this[f].checkRules();
 			}			
-			if (Object.prototype.toString.call(this[f]) === '[object Array]' && (this[f][0] instanceof Field || this[f][0] instanceof Group)) {
+			if (Object.prototype.toString.call(this[f]) === '[object Array]' && (this[f][0] instanceof Field || this[f][0] instanceof SubForm)) {
 				for (var i = 0; i < this[f].length; i++) {
 					this[f][i].checkRules();
 				}

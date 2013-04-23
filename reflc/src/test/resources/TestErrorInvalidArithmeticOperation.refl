@@ -1,0 +1,7 @@
+FORM MyForm "This is my form"
+FIELDS
+  f1 : 1..2
+RULES
+  myVar : NUMBER
+  myVar = 1 * "test"  
+END FORM

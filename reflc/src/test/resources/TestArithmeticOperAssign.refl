@@ -1,0 +1,6 @@
+FORM MyForm "This is my form"
+FIELDS
+  f1 : 1..50
+RULES
+  f1 = (((10+10)-10)/2)*2
+END FORM

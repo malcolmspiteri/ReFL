@@ -3,16 +3,16 @@ FIELDS
 fone : STRING[10]
 ftwo : OPTION { one "test1", two "test 2" }
 ftre : 11..10
-GROUP testGrp
+SUBFORM testGrp
 FIELDS
  g1 : 1..2
  g2 : STRING[1]
- GROUP testGrp2
+ SUBFORM testGrp2
  FIELDS
   g1 : 1..2
   g2 : STRING[1]
- END GROUP
+ END SUBFORM
  ffor : testGrp2
-END GROUP
+END SUBFORM
 ffor : testGrp
 END FORM

@@ -1,0 +1,8 @@
+FORM MyForm "This is my form"
+FIELDS
+  f1 : 1..2
+RULES
+  WHILE (f1 = 1)
+    f1 = 1
+  END WHILE  
+END FORM

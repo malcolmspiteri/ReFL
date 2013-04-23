@@ -1,0 +1,4 @@
+FORM MyForm "This is my form"
+FIELDS
+  f1 : 1..2
+END FORM

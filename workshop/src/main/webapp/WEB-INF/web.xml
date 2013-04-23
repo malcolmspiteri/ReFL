@@ -11,7 +11,7 @@
 		<init-param>
 			<!-- Application class name -->
 			<param-name>org.restlet.application</param-name>
-			<param-value>uk.ac.mdx.efrm.demo.eFrmApplication</param-value>
+			<param-value>uk.ac.mdx.refl.workshop.ReflApplication</param-value>
 		</init-param>
 	</servlet>
 
@@ -21,6 +21,6 @@
 		<url-pattern>/services/*</url-pattern>
 	</servlet-mapping>
 	<listener>
-		<listener-class>uk.ac.mdx.efrm.demo.DBInitContextListener</listener-class>		
+		<listener-class>uk.ac.mdx.refl.workshop.DBInitContextListener</listener-class>		
 	</listener>
 </web-app> 

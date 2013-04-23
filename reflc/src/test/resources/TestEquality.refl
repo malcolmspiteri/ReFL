@@ -1,0 +1,8 @@
+FORM MyForm "This is my form"
+FIELDS
+  f1 : OPTION { yes, no }
+RULES
+  IF (f1 == [yes]) THEN
+    ERROR INVOLVING (f1) "Test error"
+  END IF
+END FORM

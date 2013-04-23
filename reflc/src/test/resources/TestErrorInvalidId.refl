@@ -1,0 +1,8 @@
+FORM MyForm "This is my form"
+FIELDS
+  f1 : STRING[10]
+RULES
+  myVar : STRING
+  myVar = "Test"
+  f2 = myVar
+END FORM

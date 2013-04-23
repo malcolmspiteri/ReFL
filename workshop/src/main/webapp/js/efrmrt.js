@@ -65,7 +65,7 @@
   };
 })();
 
-var Group = Class.extend({
+var SubForm = Class.extend({
 	init: function(id, label) {
 		this.id = id;
 		this.label = label;		

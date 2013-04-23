@@ -6,19 +6,19 @@ formDecl		: FORM labeledId NL ;
 
 labeledId		: ID STRING? ;
 
-fieldsSection	: FIELDS NL (fieldDecl|groupDecl|NL)+ ;
+fieldsSection	: FIELDS NL (fieldDecl|subformDecl|NL)+ ;
 
 fieldDecl		: labeledId ':' (ARRAY '[' INT ']' 'OF')? type NL ;
 
 type			: STRING_TYPE '[' INT ']' #StringType
 				| lb=INT '..' ub=INT #NumberRangeType
 				| OPTION ('[' INT ']')? '{' (optionDecl ',')* optionDecl NL* '}' #OptionType				
-				| ID #groupType
+				| ID #subformType
 				;
 
 optionDecl		: NL* labeledId ;
 
-groupDecl		: GROUP ID NL fieldsSection layoutSection? rulesSection? END_GROUP NL ;
+subformDecl		: SUBFORM ID NL fieldsSection layoutSection? rulesSection? END_SUBFORM NL ;
 
 rulesSection	: RULES NL (stat|NL)+ ;
 
@@ -61,6 +61,8 @@ expr			: idRef ('.' idRef)* #IDExpr
 				| expr '>=' expr #GreaterThanOrEqualExpr
 				| expr 'IS' 'EMPTY' #IsEmptyExpr
 				| 'NOT' expr #NotExpr
+				| expr 'AND' expr #AndExpr
+				| expr 'OR' expr #OrExpr
 				| expr op=('+'|'-'|'*'|'/') expr #ArithmeticExpr
 				| INT #IntegerLiteralExpr
 				| STRING #StringLiteralExpr
@@ -76,8 +78,8 @@ FIELDS			: 'FIELDS' ;
 STRING_TYPE		: 'STRING' ;
 ARRAY			: 'ARRAY' ;
 OPTION			: 'OPTION' ;
-GROUP			: 'GROUP' ;
-END_GROUP		: 'END GROUP' ;
+SUBFORM			: 'SUBFORM' ;
+END_SUBFORM		: 'END SUBFORM' ;
 RULES			: 'RULES' ;
 NUMBER			: 'NUMBER' ;
 PARAMETERS		: 'PARAMETERS' ;

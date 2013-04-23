@@ -1,0 +1,8 @@
+FORM MyForm "This is my form"
+FIELDS
+  f1 : 1..2
+RULES
+  IF (f1 == "f1") THEN
+    f1 = 1
+  END IF  
+END FORM

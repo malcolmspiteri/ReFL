@@ -1,0 +1,6 @@
+FORM MyForm "This is my form"
+FIELDS
+  f1 : STRING[10]
+RULES
+  f1 = "test"
+END FORM

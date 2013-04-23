@@ -1,0 +1,12 @@
+FORM TestHeaderRender
+FIELDS
+f1 : 1..2
+LAYOUT
+HEADER 1 "This is a test"
+HEADER 2 "This is a test"
+HEADER 3 "This is a test"
+HEADER 4 "This is a test"
+HEADER 5 "This is a test"
+HEADER 6 "This is a test"
+f1
+END FORM
