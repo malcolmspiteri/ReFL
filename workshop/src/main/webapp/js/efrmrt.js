@@ -200,8 +200,10 @@ var Field = Class.extend({
 		}
 		if (ne > 0) {
 			this.setInvalid();
+			this.showErrors();
 		} else {
 			this.setValid();
+			this.noErrors();
 		}
 	},
 	isEmpty: function() {
@@ -219,16 +221,23 @@ var Field = Class.extend({
 	removeError: function(errKey) {
 		delete this.errors[errKey];
 	},
+	noErrors: function() {
+		this.$("input").popover('destroy');
+	},
 	showErrors: function() {
 		var html = "<ul>";
-		html += "<li>There are errors</li>";
+		for (e in this.errors) {			
+			html += "<li>" + this.errors[e] + "</li>";
+		}
 		html += "<ul>";
 		this.$("input").popover({
-			html: html,
+			html: true,
+			content: html,
 			placement: "bottom",
 			trigger: "hover",
 			title: "Errors"				
 		});
+		//this.$("input").popover('toggle');
 	}
 });
 
